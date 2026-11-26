@@ -7,7 +7,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::crypto::{Decryptor, Encryptor};
+use crate::crypto::{Decryptor, DecryptorStats, Encryptor};
 use crate::error::Result;
 use crate::session::{FailureHandler, Session};
 use crate::MediaType;
@@ -251,6 +251,11 @@ impl SessionManager {
     /// The key package to send in `DAVE_MLS_KEY_PACKAGE`.
     pub fn marshalled_key_package(&self) -> Vec<u8> {
         self.session.marshalled_key_package()
+    }
+
+    /// Counters for the frames received from `user_id`.
+    pub fn decryptor_stats(&self, user_id: &str, media: MediaType) -> Option<DecryptorStats> {
+        self.decryptors.get(user_id).map(|d| d.stats(media))
     }
 
     /// Encrypts an outgoing frame with the local encryptor.

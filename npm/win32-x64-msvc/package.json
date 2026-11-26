@@ -1,0 +1,27 @@
+{
+  "name": "@mineygg/libdave-rs-win32-x64-msvc",
+  "version": "0.1.0",
+  "cpu": [
+    "x64"
+  ],
+  "main": "libdave.win32-x64-msvc.node",
+  "files": [
+    "libdave.win32-x64-msvc.node"
+  ],
+  "description": "Prebuilt Node.js bindings (Rust, Node-API) for Discord's official libdave",
+  "author": "mineygg",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mineygg/libdave-rs.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "os": [
+    "win32"
+  ]
+}

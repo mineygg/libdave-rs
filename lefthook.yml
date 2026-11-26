@@ -1,0 +1,16 @@
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      glob: "*.{js,mjs,cjs,ts,json}"
+      run: npx biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+    rustfmt:
+      glob: "*.rs"
+      run: cargo fmt --all --check
+
+pre-push:
+  parallel: false
+  commands:
+    typecheck:
+      run: npm run typecheck

@@ -1,0 +1,27 @@
+{
+  "name": "@mineygg/libdave-rs-linux-arm-gnueabihf",
+  "version": "0.1.0",
+  "cpu": [
+    "arm"
+  ],
+  "main": "libdave.linux-arm-gnueabihf.node",
+  "files": [
+    "libdave.linux-arm-gnueabihf.node"
+  ],
+  "description": "Prebuilt Node.js bindings (Rust, Node-API) for Discord's official libdave",
+  "author": "mineygg",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mineygg/libdave-rs.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "os": [
+    "linux"
+  ]
+}

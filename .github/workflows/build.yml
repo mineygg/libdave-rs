@@ -1,8 +1,6 @@
-name: Build (cross-compile)
+name: Prebuild
 
-# Reusable workflow: builds `dave-cli` for every supported platform.
-# Linux targets are cross-compiled with cargo-zigbuild, macOS/Windows arm/x64 variants are
-# cross-compiled on a single runner of the matching OS.
+# Reusable workflow: builds the Node addon for every supported platform.
 
 on:
   workflow_call:
@@ -12,7 +10,7 @@ on:
         default: 7
 
 permissions:
-  contents: write # TEMP: lets failed builds post their log tail as a commit comment
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
@@ -21,40 +19,45 @@ env:
 
 jobs:
   build:
-    name: ${{ matrix.target }}
+    name: ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          # ---- Linux (zig cross-compilation from x64) ----
-          - { target: x86_64-unknown-linux-gnu,      os: ubuntu-latest, zig: true, zig-target: x86_64-unknown-linux-gnu.2.17 }
-          - { target: aarch64-unknown-linux-gnu,     os: ubuntu-latest, zig: true, zig-target: aarch64-unknown-linux-gnu.2.17, qemu: aarch64, sysroot: /usr/aarch64-linux-gnu, cross-pkg: libc6-arm64-cross }
-          - { target: armv7-unknown-linux-gnueabihf, os: ubuntu-latest, zig: true, zig-target: armv7-unknown-linux-gnueabihf.2.17, qemu: arm, sysroot: /usr/arm-linux-gnueabihf, cross-pkg: libc6-armhf-cross }
-          - { target: x86_64-unknown-linux-musl,     os: ubuntu-latest, zig: true, zig-target: x86_64-unknown-linux-musl }
-          - { target: aarch64-unknown-linux-musl,    os: ubuntu-latest, zig: true, zig-target: aarch64-unknown-linux-musl, qemu: aarch64 }
-          - { target: armv7-unknown-linux-musleabihf, os: ubuntu-latest, zig: true, zig-target: armv7-unknown-linux-musleabihf, qemu: arm }
-          # ---- macOS (arm64 runner builds both) ----
-          - { target: aarch64-apple-darwin,          os: macos-latest, native: true }
-          - { target: x86_64-apple-darwin,           os: macos-latest, native: true }
-          # ---- Windows (x64 runner builds both) ----
-          - { target: x86_64-pc-windows-msvc,        os: windows-latest, native: true, exe: .exe }
-          - { target: aarch64-pc-windows-msvc,       os: windows-latest, exe: .exe }
+          # ---- Linux (zig cross-compilation from x64, glibc 2.17 baseline) ----
+          - { platform: linux-x64-gnu,         target: x86_64-unknown-linux-gnu,       os: ubuntu-latest, zig: x86_64-unknown-linux-gnu.2.17,        docker: linux/amd64,  image: node:22-bookworm-slim }
+          - { platform: linux-arm64-gnu,       target: aarch64-unknown-linux-gnu,      os: ubuntu-latest, zig: aarch64-unknown-linux-gnu.2.17,       docker: linux/arm64,  image: node:22-bookworm-slim }
+          - { platform: linux-arm-gnueabihf,   target: armv7-unknown-linux-gnueabihf,  os: ubuntu-latest, zig: armv7-unknown-linux-gnueabihf.2.17,   docker: linux/arm/v7, image: node:22-bookworm-slim }
+          - { platform: linux-x64-musl,        target: x86_64-unknown-linux-musl,      os: ubuntu-latest, zig: x86_64-unknown-linux-musl,            docker: linux/amd64,  image: node:22-alpine }
+          - { platform: linux-arm64-musl,      target: aarch64-unknown-linux-musl,     os: ubuntu-latest, zig: aarch64-unknown-linux-musl,           docker: linux/arm64,  image: node:22-alpine }
+          - { platform: linux-arm-musleabihf,  target: armv7-unknown-linux-musleabihf, os: ubuntu-latest, zig: armv7-unknown-linux-musleabihf,       docker: linux/arm/v7, image: node:22-alpine }
+          # ---- macOS ----
+          - { platform: darwin-arm64,          target: aarch64-apple-darwin,           os: macos-latest,   smoke: true, js: true }
+          - { platform: darwin-x64,            target: x86_64-apple-darwin,            os: macos-15-intel, smoke: true }
+          # ---- Windows (arm64 is cross-compiled, so it is not smoke tested) ----
+          - { platform: win32-x64-msvc,        target: x86_64-pc-windows-msvc,         os: windows-latest, smoke: true }
+          - { platform: win32-arm64-msvc,      target: aarch64-pc-windows-msvc,        os: windows-latest }
     steps:
       - uses: actions/checkout@v7
         with:
           submodules: true
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
-      - name: Cache Rust build (incl. vendored OpenSSL + libdave objects)
-        uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.target }}
+          key: ${{ matrix.platform }}
           cache-on-failure: true
-          save-if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
+
+      - run: npm ci
 
       - name: Set up Zig
         if: matrix.zig
@@ -70,66 +73,42 @@ jobs:
 
       - name: Build (zig cross-compile)
         if: matrix.zig
-        shell: bash
         run: |
-          set -o pipefail
-          cargo zigbuild --release --locked -p dave-cli --target ${{ matrix.zig-target }} 2>&1 | tee build.log
+          cargo zigbuild --release --locked -p libdave-node --target ${{ matrix.zig }}
+          cp target/${{ matrix.target }}/release/liblibdave_node.so libdave.${{ matrix.platform }}.node
 
       - name: Build
         if: ${{ !matrix.zig }}
-        shell: bash
-        run: |
-          set -o pipefail
-          cargo build --release --locked -p dave-cli --target ${{ matrix.target }} 2>&1 | tee build.log
-
-      - name: Post build log tail (TEMP debugging aid)
-        if: failure()
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          [ -f build.log ] || exit 0
-          # drop cc-rs's "VAR = None/Some(..)" environment dump, keep the real output
-          grep -v -E '^[[:space:]]+[A-Za-z0-9_:-]+ = (None|Some\(|")' build.log > filtered.log || true
-          { echo "### build failure: ${{ matrix.target }}"; echo '```'; tail -n 100 filtered.log | tail -c 30000; echo '```'; echo; echo "#### error lines"; echo '```'; grep -n -i -E 'error|fatal|cannot|not found|failed|NMAKE|LNK[0-9]+' filtered.log | tail -n 40 | cut -c1-400; echo '```'; } > comment.md
-          gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/comments" -F body=@comment.md > /dev/null
+        run: npm run build:native -- --target ${{ matrix.target }}
 
       - name: Smoke test (native)
-        if: ${{ matrix.native || (matrix.zig && !matrix.qemu) }}
-        run: target/${{ matrix.target }}/release/dave-cli${{ matrix.exe }} selftest
+        if: matrix.smoke
+        run: node scripts/smoke.cjs ./libdave.${{ matrix.platform }}.node
 
-      - name: Smoke test (qemu-user)
-        if: matrix.qemu
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq qemu-user ${{ matrix.cross-pkg }}
-          bin=target/${{ matrix.target }}/release/dave-cli
-          if [ -n "${{ matrix.sysroot }}" ]; then
-            qemu-${{ matrix.qemu }} -L ${{ matrix.sysroot }} "$bin" selftest
-          else
-            qemu-${{ matrix.qemu }} "$bin" selftest
-          fi
+      - name: Set up QEMU
+        if: matrix.docker
+        uses: docker/setup-qemu-action@v3
 
-      - name: Package
-        shell: bash
-        run: |
-          set -euo pipefail
-          name="dave-cli-${{ matrix.target }}"
-          mkdir -p "dist/$name"
-          cp "target/${{ matrix.target }}/release/dave-cli${{ matrix.exe }}" "dist/$name/"
-          cp LICENSE README.md "dist/$name/" 2>/dev/null || true
-          cd dist
-          if [ "${{ matrix.exe }}" = ".exe" ]; then
-            7z a -tzip "$name.zip" "$name" > /dev/null
-          else
-            tar -czf "$name.tar.gz" "$name"
-          fi
-          rm -rf "$name"
-          ls -la
+      - name: Smoke test (docker)
+        if: matrix.docker
+        run: >
+          docker run --rm --platform ${{ matrix.docker }} -v "$PWD:/work" -w /work
+          ${{ matrix.image }} node scripts/smoke.cjs ./libdave.${{ matrix.platform }}.node
 
       - uses: actions/upload-artifact@v7
         with:
-          name: dave-cli-${{ matrix.target }}
-          path: dist/*
+          name: bindings-${{ matrix.platform }}
+          path: libdave.${{ matrix.platform }}.node
+          if-no-files-found: error
+          retention-days: ${{ inputs.retention-days }}
+
+      # The JS loader and typings are identical on every platform.
+      - uses: actions/upload-artifact@v7
+        if: matrix.js
+        with:
+          name: js-binding
+          path: |
+            binding.cjs
+            binding.d.cts
           if-no-files-found: error
           retention-days: ${{ inputs.retention-days }}

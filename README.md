@@ -11,6 +11,13 @@ npm install @mineygg/libdave-rs
 npm installs only the binary for your machine, through `optionalDependencies`.
 No compiler is needed.
 
+## Documentation
+
+**[Read the full documentation](https://github.com/mineygg/libdave-rs/tree/main/docs)**
+
+The documentation includes the getting-started guide, Node.js API reference,
+class and type references, Rust crate overview, and integration notes.
+
 ## Usage
 
 ```ts
@@ -24,7 +31,6 @@ const dave = new DaveSessionManager(selfUserId, channelId);
 dave.addUser(otherUserId);
 dave.onSelectProtocolAck(maxSupportedProtocolVersion());
 const keyPackage = dave.getMarshalledKeyPackage(); // send to the voice gateway
-
 const encrypted = dave.encrypt(MediaType.Audio, ssrc, opusFrame); // Buffer | null
 const plain = dave.decrypt(MediaType.Audio, otherUserId, received); // Buffer | null
 ```

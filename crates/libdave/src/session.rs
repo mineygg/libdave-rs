@@ -8,7 +8,8 @@ use crate::crypto::KeyRatchet;
 use crate::error::{Error, Result};
 use crate::util::{cstr_lossy, cstring, take_bytes, take_u64s, CStringArray};
 
-type FailureCallback = Box<dyn FnMut(&str, &str) + Send>;
+/// Callback invoked as `(source, reason)` when libdave reports an MLS failure.
+pub type FailureHandler = Box<dyn FnMut(&str, &str) + Send>;
 
 unsafe extern "C" fn failure_trampoline(
     source: *const c_char,
@@ -18,8 +19,8 @@ unsafe extern "C" fn failure_trampoline(
     if user_data.is_null() {
         return;
     }
-    // SAFETY: `user_data` is the `Box<FailureCallback>` owned by the `Session`.
-    let cb = unsafe { &mut *user_data.cast::<FailureCallback>() };
+    // SAFETY: `user_data` is the `Box<FailureHandler>` owned by the `Session`.
+    let cb = unsafe { &mut *user_data.cast::<FailureHandler>() };
     let (source, reason) = unsafe { (cstr_lossy(source), cstr_lossy(reason)) };
     let _ = catch_unwind(AssertUnwindSafe(|| cb(&source, &reason)));
 }
@@ -43,7 +44,7 @@ pub struct WelcomeOutcome {
 /// A DAVE MLS session (`DAVESessionHandle`).
 pub struct Session {
     raw: sys::DAVESessionHandle,
-    callback: *mut FailureCallback,
+    callback: *mut FailureHandler,
 }
 
 // SAFETY: libdave sessions have no thread affinity; all methods take `&mut self`/`&self`
@@ -56,19 +57,16 @@ impl Session {
     /// `auth_session_id` scopes persistent key lifetimes (only relevant with the
     /// `persistent-keys` feature). `on_failure` is invoked as `(source, reason)` whenever
     /// libdave reports an MLS failure.
-    pub fn new(
-        auth_session_id: Option<&str>,
-        on_failure: Option<Box<dyn FnMut(&str, &str) + Send>>,
-    ) -> Result<Self> {
+    pub fn new(auth_session_id: Option<&str>, on_failure: Option<FailureHandler>) -> Result<Self> {
         let auth = auth_session_id
             .map(|s| cstring(s, "auth session id"))
             .transpose()?;
         let auth_ptr = auth.as_ref().map_or(ptr::null(), |c| c.as_ptr());
 
-        let (cb_ptr, cb_fn): (*mut FailureCallback, Option<sys::DAVEMLSFailureCallback>) =
+        let (cb_ptr, cb_fn): (*mut FailureHandler, Option<sys::DAVEMLSFailureCallback>) =
             match on_failure {
                 Some(f) => {
-                    let boxed: Box<FailureCallback> = Box::new(f);
+                    let boxed: Box<FailureHandler> = Box::new(f);
                     (Box::into_raw(boxed), Some(failure_trampoline))
                 }
                 None => (ptr::null_mut(), None),

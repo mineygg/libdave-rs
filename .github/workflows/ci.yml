@@ -97,6 +97,17 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - run: cargo test -p libdave -p libdave-sys --locked
 
+  crates:
+    name: cargo publish (dry run)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+      - uses: dtolnay/rust-toolchain@stable
+      # Packages both crates and compiles them from the packaged files.
+      - run: cargo publish --dry-run --locked -p libdave-sys -p libdave
+
   build:
     name: build
     uses: ./.github/workflows/build.yml

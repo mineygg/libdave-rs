@@ -9,6 +9,31 @@ authors.workspace = true
 repository.workspace = true
 links = "dave"
 build = "build.rs"
+readme = "README.md"
+keywords = ["discord", "dave", "e2ee", "mls", "ffi"]
+categories = ["external-ffi-bindings", "cryptography"]
+# Only what build.rs compiles, to stay under the crates.io size limit.
+include = [
+    "/build.rs",
+    "/src/**",
+    "/README.md",
+    "/LICENSE",
+    "/vendor/libdave/LICENSE",
+    "/vendor/libdave/cpp/includes/**",
+    "/vendor/libdave/cpp/src/**",
+    "/vendor/mlspp/LICENSE",
+    "/vendor/mlspp/include/**",
+    "/vendor/mlspp/src/**",
+    "/vendor/mlspp/third_party/*.hpp",
+    "/vendor/mlspp/lib/bytes/include/**",
+    "/vendor/mlspp/lib/bytes/src/**",
+    "/vendor/mlspp/lib/tls_syntax/include/**",
+    "/vendor/mlspp/lib/tls_syntax/src/**",
+    "/vendor/mlspp/lib/hpke/include/**",
+    "/vendor/mlspp/lib/hpke/src/**",
+    "/vendor/nlohmann_json/LICENSE.MIT",
+    "/vendor/nlohmann_json/include/**",
+]
 
 [features]
 default = ["vendored-openssl"]

@@ -65,7 +65,7 @@
     "test:pack": "node scripts/test-pack.mjs",
     "create-npm-dirs": "napi create-npm-dirs",
     "artifacts": "napi artifacts --output-dir artifacts --npm-dir npm",
-    "version": "napi version && git add npm",
+    "version": "napi version && node scripts/sync-cargo-version.mjs && git add npm Cargo.toml Cargo.lock crates/libdave/Cargo.toml",
     "prepublishOnly": "napi prepublish --tag-style npm --no-gh-release",
     "prepare": "lefthook install || exit 0"
   },

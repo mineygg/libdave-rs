@@ -70,9 +70,11 @@ Git hooks are managed by lefthook.
 
 ## Releasing
 
-Set the `NPM_TOKEN` repository secret, then:
+Set the `NPM_TOKEN` and `CARGO_REGISTRY_TOKEN` repository secrets, then run the
+commands below. This publishes the npm packages and the `libdave-sys` and
+`libdave` crates.
 
 ```sh
-npm version patch   # also bumps the platform packages
+npm version patch   # also bumps the platform packages and crates
 git push --follow-tags
 ```

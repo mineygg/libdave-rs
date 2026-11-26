@@ -1,7 +1,7 @@
 name: Release
 
-# Pushing a `v<version>` tag builds every platform and publishes to npm.
-# Requires the `NPM_TOKEN` repository secret.
+# Pushing a `v<version>` tag publishes to npm and crates.io.
+# Requires the `NPM_TOKEN` and `CARGO_REGISTRY_TOKEN` repository secrets.
 
 on:
   push:
@@ -46,3 +46,20 @@ jobs:
       - run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-crates:
+    name: Publish to crates.io
+    # Waits for every platform to build, so a broken release reaches neither registry.
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Check that the tag matches Cargo.toml
+        run: grep -qxF "version = \"${GITHUB_REF_NAME#v}\"" Cargo.toml
+      # Publishes `libdave-sys` first, then `libdave`.
+      - run: cargo publish --locked -p libdave-sys -p libdave
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

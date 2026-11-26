@@ -1,0 +1,117 @@
+name: Build (cross-compile)
+
+# Reusable workflow: builds `dave-cli` for every supported platform.
+# Linux targets are cross-compiled with cargo-zigbuild, macOS/Windows arm/x64 variants are
+# cross-compiled on a single runner of the matching OS.
+
+on:
+  workflow_call:
+    inputs:
+      retention-days:
+        type: number
+        default: 7
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_GIT_FETCH_WITH_CLI: true
+
+jobs:
+  build:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ---- Linux (zig cross-compilation from x64) ----
+          - { target: x86_64-unknown-linux-gnu,      os: ubuntu-latest, zig: true, zig-target: x86_64-unknown-linux-gnu.2.17 }
+          - { target: aarch64-unknown-linux-gnu,     os: ubuntu-latest, zig: true, zig-target: aarch64-unknown-linux-gnu.2.17, qemu: aarch64, sysroot: /usr/aarch64-linux-gnu, cross-pkg: libc6-arm64-cross }
+          - { target: armv7-unknown-linux-gnueabihf, os: ubuntu-latest, zig: true, zig-target: armv7-unknown-linux-gnueabihf.2.17, qemu: arm, sysroot: /usr/arm-linux-gnueabihf, cross-pkg: libc6-armhf-cross }
+          - { target: x86_64-unknown-linux-musl,     os: ubuntu-latest, zig: true, zig-target: x86_64-unknown-linux-musl }
+          - { target: aarch64-unknown-linux-musl,    os: ubuntu-latest, zig: true, zig-target: aarch64-unknown-linux-musl, qemu: aarch64 }
+          - { target: armv7-unknown-linux-musleabihf, os: ubuntu-latest, zig: true, zig-target: armv7-unknown-linux-musleabihf, qemu: arm }
+          # ---- macOS (arm64 runner builds both) ----
+          - { target: aarch64-apple-darwin,          os: macos-latest, native: true }
+          - { target: x86_64-apple-darwin,           os: macos-latest, native: true }
+          # ---- Windows (x64 runner builds both) ----
+          - { target: x86_64-pc-windows-msvc,        os: windows-latest, native: true, exe: .exe }
+          - { target: aarch64-pc-windows-msvc,       os: windows-latest, exe: .exe }
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Rust build (incl. vendored OpenSSL + libdave objects)
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+          cache-on-failure: true
+          save-if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
+
+      - name: Set up Zig
+        if: matrix.zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.14.1
+
+      - name: Install cargo-zigbuild
+        if: matrix.zig
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-zigbuild
+
+      - name: Build (zig cross-compile)
+        if: matrix.zig
+        run: cargo zigbuild --release --locked -p dave-cli --target ${{ matrix.zig-target }}
+
+      - name: Build
+        if: ${{ !matrix.zig }}
+        run: cargo build --release --locked -p dave-cli --target ${{ matrix.target }}
+
+      - name: Smoke test (native)
+        if: ${{ matrix.native || (matrix.zig && !matrix.qemu) }}
+        run: target/${{ matrix.target }}/release/dave-cli${{ matrix.exe }} selftest
+
+      - name: Smoke test (qemu-user)
+        if: matrix.qemu
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-user ${{ matrix.cross-pkg }}
+          bin=target/${{ matrix.target }}/release/dave-cli
+          if [ -n "${{ matrix.sysroot }}" ]; then
+            qemu-${{ matrix.qemu }} -L ${{ matrix.sysroot }} "$bin" selftest
+          else
+            qemu-${{ matrix.qemu }} "$bin" selftest
+          fi
+
+      - name: Package
+        shell: bash
+        run: |
+          set -euo pipefail
+          name="dave-cli-${{ matrix.target }}"
+          mkdir -p "dist/$name"
+          cp "target/${{ matrix.target }}/release/dave-cli${{ matrix.exe }}" "dist/$name/"
+          cp LICENSE README.md "dist/$name/" 2>/dev/null || true
+          cd dist
+          if [ "${{ matrix.exe }}" = ".exe" ]; then
+            7z a -tzip "$name.zip" "$name" > /dev/null
+          else
+            tar -czf "$name.tar.gz" "$name"
+          fi
+          rm -rf "$name"
+          ls -la
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dave-cli-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: ${{ inputs.retention-days }}

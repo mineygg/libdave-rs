@@ -1,0 +1,20 @@
+[workspace]
+resolver = "2"
+members = ["crates/libdave-sys", "crates/libdave", "crates/dave-cli"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.74"
+license = "MIT"
+authors = ["mineygg"]
+repository = "https://github.com/mineygg/libdave-rs"
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+
+[profile.release]
+lto = "thin"
+opt-level = 3
+codegen-units = 1
+strip = true

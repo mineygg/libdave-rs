@@ -1,0 +1,27 @@
+[package]
+name = "libdave-sys"
+description = "Raw FFI bindings to Discord's libdave (DAVE E2EE), built from vendored sources"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+links = "dave"
+build = "build.rs"
+
+[features]
+default = ["vendored-openssl"]
+# Build OpenSSL from source (openssl-src). Disable to link a system OpenSSL >= 3.0.
+vendored-openssl = ["openssl-sys/vendored"]
+# Enable libdave's on-disk persistent signature keys (Keychain / CNG / key files).
+persistent-keys = []
+
+[dependencies]
+openssl-sys = "0.9"
+
+[build-dependencies]
+cc = { version = "1", features = ["parallel"] }
+
+[lints]
+workspace = true

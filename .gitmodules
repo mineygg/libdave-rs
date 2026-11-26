@@ -1,0 +1,9 @@
+[submodule "crates/libdave-sys/vendor/libdave"]
+	path = crates/libdave-sys/vendor/libdave
+	url = https://github.com/discord/libdave.git
+[submodule "crates/libdave-sys/vendor/mlspp"]
+	path = crates/libdave-sys/vendor/mlspp
+	url = https://github.com/cisco/mlspp.git
+[submodule "crates/libdave-sys/vendor/nlohmann_json"]
+	path = crates/libdave-sys/vendor/nlohmann_json
+	url = https://github.com/nlohmann/json.git

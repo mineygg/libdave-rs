@@ -1,0 +1,59 @@
+name: Bug report
+description: Report a problem with the Node.js package or the Rust crates
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please keep tokens and keys out of logs. Dump only what is needed to show the problem.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where does it go wrong?
+      options:
+        - Installing, or the prebuilt binary won't load
+        - Building from source
+        - Creating or joining a session (key packages, welcomes, commits)
+        - Encrypting or decrypting media frames
+        - Protocol transitions or epoch changes
+        - Types or API surface
+        - Something else
+    validations:
+      required: true
+  - type: dropdown
+    id: using
+    attributes:
+      label: How are you using it?
+      options:
+        - Node.js (@mineygg/libdave-rs)
+        - Rust (libdave-rs)
+        - Rust (libdave-rs-sys directly)
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Code or steps to reproduce
+      description: The smallest snippet or sequence of gateway opcodes that triggers it.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: Expected vs actual behavior
+      description: Include the full error message or stack trace if there is one.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      placeholder: 0.1.1
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: OS, CPU and Node.js or Rust version
+      placeholder: Windows 11 arm64, Node 26

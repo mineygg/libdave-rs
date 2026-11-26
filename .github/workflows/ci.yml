@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, node-binding]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 

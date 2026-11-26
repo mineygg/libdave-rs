@@ -29,7 +29,8 @@
   "files": [
     "dist",
     "binding.cjs",
-    "binding.d.cts"
+    "binding.d.cts",
+    "THIRD_PARTY_LICENSES"
   ],
   "engines": {
     "node": ">=18"
@@ -59,6 +60,8 @@
     "build:native": "napi build --platform --release --manifest-path crates/libdave-node/Cargo.toml --output-dir . --js binding.cjs --dts binding.d.cts",
     "build:ts": "tsup",
     "typecheck": "tsc --noEmit",
+    "licenses": "node scripts/licenses.mjs",
+    "licenses:check": "node scripts/licenses.mjs --check",
     "lint": "biome check --error-on-warnings .",
     "lint:fix": "biome check --write .",
     "test": "vitest run",

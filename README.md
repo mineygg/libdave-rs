@@ -78,3 +78,9 @@ commands below. This publishes the npm packages and the `libdave-sys` and
 npm version patch   # also bumps the platform packages and crates
 git push --follow-tags
 ```
+
+## License
+
+This project is MIT licensed. The published binaries and `libdave-sys` include
+third-party code under its own terms, listed in `THIRD_PARTY_LICENSES`. After
+changing dependencies or submodules, run `npm run licenses`.

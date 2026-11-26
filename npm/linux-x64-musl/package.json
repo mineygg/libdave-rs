@@ -6,11 +6,13 @@
   ],
   "main": "libdave.linux-x64-musl.node",
   "files": [
-    "libdave.linux-x64-musl.node"
+    "libdave.linux-x64-musl.node",
+    "LICENSE",
+    "THIRD_PARTY_LICENSES"
   ],
   "description": "Prebuilt Node.js bindings (Rust, Node-API) for Discord's official libdave",
   "author": "mineygg",
-  "license": "MIT",
+  "license": "SEE LICENSE IN THIRD_PARTY_LICENSES",
   "engines": {
     "node": ">=18"
   },

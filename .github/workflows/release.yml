@@ -22,6 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          submodules: true
       - uses: actions/setup-node@v6
         with:
           node-version: 26
@@ -41,6 +43,9 @@ jobs:
       - name: Require all ten binaries
         run: test "$(find npm -name '*.node' | wc -l)" -eq 10
       - run: npm run build:ts
+      - run: cargo fetch --locked
+      - name: Check license notices
+        run: npm run licenses:check
       # `prepublishOnly` publishes the platform packages first and adds them to
       # the umbrella package's optionalDependencies.
       - run: npm publish --access public

@@ -97,6 +97,21 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - run: cargo test -p libdave -p libdave-sys --locked
 
+  licenses:
+    name: license notices
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 26
+      - uses: dtolnay/rust-toolchain@stable
+      # `cargo metadata` needs every crate source; nothing is compiled.
+      - run: cargo fetch --locked
+      - run: node scripts/licenses.mjs --check
+
   crates:
     name: cargo publish (dry run)
     runs-on: ubuntu-latest

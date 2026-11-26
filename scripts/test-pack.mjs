@@ -3,6 +3,7 @@
 import { execSync } from 'node:child_process';
 import {
   copyFileSync,
+  existsSync,
   mkdtempSync,
   readdirSync,
   rmSync,
@@ -44,6 +45,12 @@ try {
     join(work, 'check.cjs'),
     `const m = require('@mineygg/libdave-rs');\n${check}\n`,
   );
+  for (const name of ['libdave-rs', `libdave-rs-${platform}`]) {
+    for (const file of ['LICENSE', 'THIRD_PARTY_LICENSES']) {
+      const path = join(work, 'node_modules', '@mineygg', name, file);
+      if (!existsSync(path)) throw new Error(`${name} is missing ${file}`);
+    }
+  }
   run('node check.mjs', work);
   run('node check.cjs', work);
   console.log(`pack test ok (${platform})`);

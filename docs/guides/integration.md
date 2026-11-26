@@ -36,11 +36,11 @@ Use `setLogSink` to route native logs to your logger. Use `getEncryptStats`, `ge
 
 The repository README lists these prebuilt targets:
 
-| Platform | Architectures |
-|---|---|
-| Linux glibc | x64, arm64, armv7 |
-| Linux musl | x64, arm64, armv7 |
-| macOS | x64, arm64 |
-| Windows (MSVC) | x64, arm64 |
+| Platform       | Architectures     |
+| -------------- | ----------------- |
+| Linux glibc    | x64, arm64, armv7 |
+| Linux musl     | x64, arm64, armv7 |
+| macOS          | x64, arm64        |
+| Windows (MSVC) | x64, arm64        |
 
 The package declares Node.js `>=18`.

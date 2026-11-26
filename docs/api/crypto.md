@@ -13,7 +13,7 @@ Encrypts outgoing media frames.
 ### Constructor
 
 ```ts
-new Encryptor()
+new Encryptor();
 ```
 
 ### `setKeyRatchet(ratchet: KeyRatchet): void`
@@ -59,7 +59,7 @@ Decrypts media frames from one remote sender.
 ### Constructor
 
 ```ts
-new Decryptor()
+new Decryptor();
 ```
 
 ### `transitionToKeyRatchet(ratchet: KeyRatchet): void`

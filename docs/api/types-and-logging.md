@@ -122,7 +122,7 @@ Installs a process-wide callback for libdave log messages. Pass `null` or omit t
 Messages are delivered asynchronously. The callback does not keep the Node.js event loop alive.
 
 ```ts
-import { setLogSink, LogSeverity } from "@mineygg/libdave-rs";
+import { setLogSink, LogSeverity } from '@mineygg/libdave-rs';
 
 setLogSink((entry) => {
   if (entry.severity === LogSeverity.Error) {

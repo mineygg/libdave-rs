@@ -20,7 +20,7 @@ import {
   DaveSessionManager,
   MediaType,
   maxSupportedProtocolVersion,
-} from "@mineygg/libdave-rs";
+} from '@mineygg/libdave-rs';
 
 const manager = new DaveSessionManager(selfUserId, channelId);
 
@@ -45,7 +45,7 @@ const {
   DaveSessionManager,
   MediaType,
   maxSupportedProtocolVersion,
-} = require("@mineygg/libdave-rs");
+} = require('@mineygg/libdave-rs');
 ```
 
 The package publishes ESM and CommonJS entry points and matching declaration files.

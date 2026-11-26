@@ -166,7 +166,7 @@ fn main() {
     }
     dave_build.define("WITH_OPENSSL3", None);
     if let Some(path) = &msvc_compat {
-        dave_build.flag(&format!("/FI{}", path.display()));
+        dave_build.flag(format!("/FI{}", path.display()));
     }
     dave_build.files(&dave_sources);
     dave_build.compile("dave_core");

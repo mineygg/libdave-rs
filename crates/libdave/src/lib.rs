@@ -23,7 +23,7 @@ use libdave_sys as sys;
 pub use crypto::{Decryptor, DecryptorStats, Encryptor, EncryptorStats, KeyRatchet};
 pub use error::{DecryptError, EncryptError, Error, Result};
 pub use manager::{CommitResult, SessionManager, WelcomeResult};
-pub use session::{CommitOutcome, Session, WelcomeOutcome};
+pub use session::{CommitOutcome, FailureHandler, Session, WelcomeOutcome};
 
 /// Media type of a frame.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -60,7 +60,8 @@ pub enum LogSeverity {
     Error,
 }
 
-type LogSink = Box<dyn Fn(LogSeverity, &str, i32, &str) + Send + Sync>;
+/// Process-wide log sink: `(severity, file, line, message)`.
+pub type LogSink = Box<dyn Fn(LogSeverity, &str, i32, &str) + Send + Sync>;
 static LOG_SINK: RwLock<Option<LogSink>> = RwLock::new(None);
 
 unsafe extern "C" fn log_trampoline(

@@ -10,7 +10,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::crypto::{Decryptor, Encryptor};
 use crate::error::Result;
-use crate::session::Session;
+use crate::session::{FailureHandler, Session};
 use crate::MediaType;
 
 /// Result of [`SessionManager::on_mls_commit`].
@@ -45,7 +45,7 @@ impl SessionManager {
     pub fn new(
         self_user_id: impl Into<String>,
         group_id: u64,
-        on_failure: Option<Box<dyn FnMut(&str, &str) + Send>>,
+        on_failure: Option<FailureHandler>,
     ) -> Result<Self> {
         Ok(Self {
             session: Session::new(None, on_failure)?,

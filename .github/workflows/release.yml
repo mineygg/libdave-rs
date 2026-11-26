@@ -14,7 +14,7 @@ jobs:
     with:
       retention-days: 30
     permissions:
-      contents: read
+      contents: write
 
   publish:
     name: Publish GitHub release

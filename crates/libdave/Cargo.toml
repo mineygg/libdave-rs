@@ -8,7 +8,7 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 readme = "README.md"
-keywords = ["discord", "dave", "e2ee", "mls", "voice"]
+keywords = ["discord", "dave", "e2ee", "libdave", "webrtc"]
 categories = ["api-bindings", "cryptography"]
 
 [features]

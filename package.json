@@ -3,6 +3,19 @@
   "name": "@mineygg/libdave-rs",
   "version": "0.1.1",
   "description": "Prebuilt Node.js bindings (Rust, Node-API) for Discord's official libdave",
+  "keywords": [
+    "dave",
+    "discord",
+    "discord-voice",
+    "e2ee-encryption",
+    "libdave",
+    "napi-rs",
+    "nodejs",
+    "prebuilt",
+    "prebuilt-binaries",
+    "rust",
+    "webrtc"
+  ],
   "license": "MIT",
   "author": "mineygg",
   "repository": {

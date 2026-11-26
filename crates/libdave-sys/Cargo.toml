@@ -11,7 +11,7 @@ repository.workspace = true
 links = "dave"
 build = "build.rs"
 readme = "README.md"
-keywords = ["discord", "dave", "e2ee", "mls", "ffi"]
+keywords = ["discord", "dave", "e2ee", "libdave", "ffi"]
 categories = ["external-ffi-bindings", "cryptography"]
 # Only what build.rs compiles, to stay under the crates.io size limit.
 include = [

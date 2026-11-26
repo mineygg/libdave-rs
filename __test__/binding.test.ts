@@ -44,8 +44,16 @@ describe('Session', () => {
     session.init(maxSupportedProtocolVersion(), GROUP, '42');
     const junk = Buffer.from([1, 2, 3]);
     expect(session.processCommit(junk).roster).toEqual([]);
-    expect(session.processWelcome(junk, ['42'])).toBeNull();
+    expect(session.processWelcome(junk)).toBeNull();
+    expect(session.processProposals(junk)).toBeNull();
     expect(Array.isArray(session.takeFailures())).toBe(true);
+  });
+
+  it('tracks recognized users', () => {
+    const session = new Session();
+    session.addRecognizedUser('43');
+    session.removeRecognizedUser('43');
+    expect(() => session.addRecognizedUser('4\u00003')).toThrow(/user id/);
   });
 
   it('rejects a fingerprint request without an MLS group', async () => {

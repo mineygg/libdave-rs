@@ -112,17 +112,27 @@ impl Session {
         Ok(())
     }
 
+    /// Marks a user as connected to the call. MLS messages naming other users are rejected.
+    #[napi]
+    pub fn add_recognized_user(&mut self, user_id: String) -> Result<()> {
+        self.get_mut()?
+            .add_recognized_user(&user_id)
+            .map_err(to_napi)
+    }
+
+    #[napi]
+    pub fn remove_recognized_user(&mut self, user_id: String) -> Result<()> {
+        self.get_mut()?
+            .remove_recognized_user(&user_id)
+            .map_err(to_napi)
+    }
+
     /// Returns the commit/welcome bytes to send back, or `null` if none were produced.
     #[napi]
-    pub fn process_proposals(
-        &mut self,
-        proposals: &[u8],
-        recognized_user_ids: Vec<String>,
-    ) -> Result<Option<Buffer>> {
+    pub fn process_proposals(&mut self, proposals: &[u8]) -> Result<Option<Buffer>> {
         Ok(self
             .get_mut()?
-            .process_proposals(proposals, &recognized_user_ids)
-            .map_err(to_napi)?
+            .process_proposals(proposals)
             .map(Buffer::from))
     }
 
@@ -138,15 +148,10 @@ impl Session {
 
     /// Returns `null` if the welcome could not be processed.
     #[napi]
-    pub fn process_welcome(
-        &mut self,
-        welcome: &[u8],
-        recognized_user_ids: Vec<String>,
-    ) -> Result<Option<WelcomeOutcome>> {
+    pub fn process_welcome(&mut self, welcome: &[u8]) -> Result<Option<WelcomeOutcome>> {
         Ok(self
             .get_mut()?
-            .process_welcome(welcome, &recognized_user_ids)
-            .map_err(to_napi)?
+            .process_welcome(welcome)
             .map(|outcome| WelcomeOutcome {
                 roster: ids(outcome.roster),
             }))

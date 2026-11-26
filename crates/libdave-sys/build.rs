@@ -41,7 +41,6 @@ fn main() {
 
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
     let target_env = env::var("CARGO_CFG_TARGET_ENV").unwrap_or_default();
-    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
     let is_msvc = target_env == "msvc";
     let persistent_keys = env::var_os("CARGO_FEATURE_PERSISTENT_KEYS").is_some();
 
@@ -66,26 +65,6 @@ fn main() {
         "#pragma once\n\n#define MLS_NAMESPACE mlspp\n",
     )
     .unwrap();
-
-    // libdave's `OverflowAdd` only has MSVC code paths for x86/x64 and otherwise falls back to
-    // the GCC/Clang builtin, which `cl.exe` (e.g. on ARM64) doesn't know. Provide a shim and
-    // force-include it rather than patching the vendored sources.
-    let msvc_compat = if is_msvc && target_arch != "x86_64" && target_arch != "x86" {
-        let path = gen_include.join("libdave_msvc_compat.h");
-        fs::write(
-            &path,
-            "#pragma once\n\
-             template <typename T>\n\
-             inline bool __builtin_add_overflow(T a, T b, T* res) {\n\
-             \x20   *res = static_cast<T>(a + b);\n\
-             \x20   return *res < a;\n\
-             }\n",
-        )
-        .unwrap();
-        Some(path)
-    } else {
-        None
-    };
 
     // ---- mlspp (+ bytes / tls_syntax / hpke) ------------------------------------------------
     let mut mlspp_sources = cpp_files(&mlspp.join("src"), false);
@@ -165,9 +144,8 @@ fn main() {
         dave_build.include(mlspp.join("lib").join(lib).join("include"));
     }
     dave_build.define("WITH_OPENSSL3", None);
-    if let Some(path) = &msvc_compat {
-        dave_build.flag(format!("/FI{}", path.display()));
-    }
+    // Linked statically, so the C API must not be exported from the final binary.
+    dave_build.define("DAVE_STATIC", None);
     dave_build.files(&dave_sources);
     dave_build.compile("dave_core");
 

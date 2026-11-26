@@ -138,23 +138,20 @@ impl SessionManager {
         Ok(())
     }
 
-    fn all_recognized_ids(&self) -> Vec<String> {
-        let mut ids: Vec<String> = self.recognized_users.iter().cloned().collect();
-        ids.push(self.self_user_id.clone());
-        ids
-    }
-
     /// A user joined the call.
     pub fn add_user(&mut self, user_id: &str) -> Result<()> {
+        self.session.add_recognized_user(user_id)?;
         self.recognized_users.insert(user_id.to_owned());
         let version = self.latest_version;
         self.refresh_ratchet(user_id, version)
     }
 
     /// A user left the call.
-    pub fn remove_user(&mut self, user_id: &str) {
+    pub fn remove_user(&mut self, user_id: &str) -> Result<()> {
+        self.session.remove_recognized_user(user_id)?;
         self.recognized_users.remove(user_id);
         self.decryptors.remove(user_id);
+        Ok(())
     }
 
     /// `SELECT_PROTOCOL_ACK` carried `dave_protocol_version`.
@@ -200,14 +197,9 @@ impl SessionManager {
     }
 
     /// `DAVE_MLS_PROPOSALS`. Returns the commit/welcome bytes to send back, if any.
-    /// `user_ids` defaults to every recognized user plus ourselves.
-    pub fn on_mls_proposals(
-        &mut self,
-        proposals: &[u8],
-        user_ids: Option<&[String]>,
-    ) -> Result<Option<Vec<u8>>> {
-        let ids = user_ids.map_or_else(|| self.all_recognized_ids(), <[String]>::to_vec);
-        self.session.process_proposals(proposals, &ids)
+    /// Only users announced through [`SessionManager::add_user`] (and ourselves) are accepted.
+    pub fn on_mls_proposals(&mut self, proposals: &[u8]) -> Option<Vec<u8>> {
+        self.session.process_proposals(proposals)
     }
 
     /// `DAVE_MLS_ANNOUNCE_COMMIT_TRANSITION`.
@@ -230,15 +222,9 @@ impl SessionManager {
     }
 
     /// `DAVE_MLS_WELCOME`.
-    pub fn on_mls_welcome(
-        &mut self,
-        transition_id: u16,
-        welcome: &[u8],
-        user_ids: Option<&[String]>,
-    ) -> Result<WelcomeResult> {
-        let ids = user_ids.map_or_else(|| self.all_recognized_ids(), <[String]>::to_vec);
+    pub fn on_mls_welcome(&mut self, transition_id: u16, welcome: &[u8]) -> Result<WelcomeResult> {
         let mut ready = false;
-        if let Some(outcome) = self.session.process_welcome(welcome, &ids)? {
+        if let Some(outcome) = self.session.process_welcome(welcome) {
             if !outcome.roster.is_empty() {
                 let version = self.session.protocol_version();
                 self.prepare_ratchets(transition_id, version)?;

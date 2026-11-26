@@ -41,34 +41,6 @@ pub(crate) unsafe fn take_u64s(ptr: *mut u64, len: usize) -> Vec<u64> {
     v
 }
 
-/// Owns a set of C strings plus the pointer array libdave expects.
-pub(crate) struct CStringArray {
-    _strings: Vec<CString>,
-    ptrs: Vec<*const c_char>,
-}
-
-impl CStringArray {
-    pub(crate) fn new<S: AsRef<str>>(items: &[S]) -> Result<Self> {
-        let strings = items
-            .iter()
-            .map(|s| cstring(s.as_ref(), "user id contains a NUL byte"))
-            .collect::<Result<Vec<_>>>()?;
-        let ptrs = strings.iter().map(|s| s.as_ptr()).collect();
-        Ok(Self {
-            _strings: strings,
-            ptrs,
-        })
-    }
-
-    pub(crate) fn as_ptr(&self) -> *const *const c_char {
-        self.ptrs.as_ptr()
-    }
-
-    pub(crate) fn len(&self) -> usize {
-        self.ptrs.len()
-    }
-}
-
 pub(crate) unsafe fn cstr_lossy(p: *const c_char) -> String {
     if p.is_null() {
         String::new()

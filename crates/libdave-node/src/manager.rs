@@ -62,8 +62,7 @@ impl DaveSessionManager {
 
     #[napi]
     pub fn remove_user(&mut self, user_id: String) -> Result<()> {
-        self.get_mut()?.remove_user(&user_id);
-        Ok(())
+        self.get_mut()?.remove_user(&user_id).map_err(to_napi)
     }
 
     #[napi]
@@ -114,15 +113,10 @@ impl DaveSessionManager {
     }
 
     #[napi]
-    pub fn on_mls_proposals(
-        &mut self,
-        proposals: &[u8],
-        user_ids: Option<Vec<String>>,
-    ) -> Result<Option<Buffer>> {
+    pub fn on_mls_proposals(&mut self, proposals: &[u8]) -> Result<Option<Buffer>> {
         Ok(self
             .get_mut()?
-            .on_mls_proposals(proposals, user_ids.as_deref())
-            .map_err(to_napi)?
+            .on_mls_proposals(proposals)
             .map(Buffer::from))
     }
 
@@ -143,11 +137,10 @@ impl DaveSessionManager {
         &mut self,
         transition_id: u16,
         welcome: &[u8],
-        user_ids: Option<Vec<String>>,
     ) -> Result<MlsWelcomeResult> {
         let result = self
             .get_mut()?
-            .on_mls_welcome(transition_id, welcome, user_ids.as_deref())
+            .on_mls_welcome(transition_id, welcome)
             .map_err(to_napi)?;
         Ok(MlsWelcomeResult {
             ready: result.ready,

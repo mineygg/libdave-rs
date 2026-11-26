@@ -7,7 +7,7 @@ use libdave_sys as sys;
 
 use crate::crypto::KeyRatchet;
 use crate::error::{Error, Result};
-use crate::util::{cstr_lossy, cstring, take_bytes, take_u64s, CStringArray};
+use crate::util::{cstr_lossy, cstring, take_bytes, take_u64s};
 
 /// Callback invoked as `(source, reason)` when libdave reports an MLS failure.
 pub type FailureHandler = Box<dyn FnMut(&str, &str) + Send>;
@@ -118,14 +118,26 @@ impl Session {
         };
     }
 
+    /// Marks `user_id` as connected to the call, allowing it in the MLS group.
+    ///
+    /// libdave rejects proposals, commits and welcomes that name unrecognized users. The local
+    /// user is always recognized, and the set survives [`Session::init`] and [`Session::reset`].
+    pub fn add_recognized_user(&mut self, user_id: &str) -> Result<()> {
+        let id = cstring(user_id, "user id")?;
+        unsafe { sys::daveSessionAddRecognizedUser(self.raw, id.as_ptr()) };
+        Ok(())
+    }
+
+    /// Marks `user_id` as no longer connected to the call.
+    pub fn remove_recognized_user(&mut self, user_id: &str) -> Result<()> {
+        let id = cstring(user_id, "user id")?;
+        unsafe { sys::daveSessionRemoveRecognizedUser(self.raw, id.as_ptr()) };
+        Ok(())
+    }
+
     /// Processes `DAVE_MLS_PROPOSALS`. Returns the serialized commit (+ welcome) to send back,
     /// if one was produced.
-    pub fn process_proposals<S: AsRef<str>>(
-        &mut self,
-        proposals: &[u8],
-        recognized_user_ids: &[S],
-    ) -> Result<Option<Vec<u8>>> {
-        let ids = CStringArray::new(recognized_user_ids)?;
+    pub fn process_proposals(&mut self, proposals: &[u8]) -> Option<Vec<u8>> {
         let mut out: *mut u8 = ptr::null_mut();
         let mut len = 0usize;
         unsafe {
@@ -133,12 +145,10 @@ impl Session {
                 self.raw,
                 proposals.as_ptr(),
                 proposals.len(),
-                ids.as_ptr(),
-                ids.len(),
                 &mut out,
                 &mut len,
             );
-            Ok(take_bytes(out, len).filter(|v| !v.is_empty()))
+            take_bytes(out, len).filter(|v| !v.is_empty())
         }
     }
 
@@ -173,23 +183,11 @@ impl Session {
     }
 
     /// Processes `DAVE_MLS_WELCOME`. Returns `None` if the welcome could not be processed.
-    pub fn process_welcome<S: AsRef<str>>(
-        &mut self,
-        welcome: &[u8],
-        recognized_user_ids: &[S],
-    ) -> Result<Option<WelcomeOutcome>> {
-        let ids = CStringArray::new(recognized_user_ids)?;
-        let handle = unsafe {
-            sys::daveSessionProcessWelcome(
-                self.raw,
-                welcome.as_ptr(),
-                welcome.len(),
-                ids.as_ptr(),
-                ids.len(),
-            )
-        };
+    pub fn process_welcome(&mut self, welcome: &[u8]) -> Option<WelcomeOutcome> {
+        let handle =
+            unsafe { sys::daveSessionProcessWelcome(self.raw, welcome.as_ptr(), welcome.len()) };
         if handle.is_null() {
-            return Ok(None);
+            return None;
         }
         let mut out: *mut u64 = ptr::null_mut();
         let mut len = 0usize;
@@ -198,7 +196,7 @@ impl Session {
             take_u64s(out, len)
         };
         unsafe { sys::daveWelcomeResultDestroy(handle) };
-        Ok(Some(WelcomeOutcome { roster }))
+        Some(WelcomeOutcome { roster })
     }
 
     /// The marshalled MLS key package to send in `DAVE_MLS_KEY_PACKAGE`.

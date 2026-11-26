@@ -129,12 +129,12 @@ extern "C" {
         externalSender: *const u8,
         length: usize,
     );
+    pub fn daveSessionAddRecognizedUser(session: DAVESessionHandle, userId: *const c_char);
+    pub fn daveSessionRemoveRecognizedUser(session: DAVESessionHandle, userId: *const c_char);
     pub fn daveSessionProcessProposals(
         session: DAVESessionHandle,
         proposals: *const u8,
         length: usize,
-        recognizedUserIds: *const *const c_char,
-        recognizedUserIdsLength: usize,
         commitWelcomeBytes: *mut *mut u8,
         commitWelcomeBytesLength: *mut usize,
     );
@@ -147,8 +147,6 @@ extern "C" {
         session: DAVESessionHandle,
         welcome: *const u8,
         length: usize,
-        recognizedUserIds: *const *const c_char,
-        recognizedUserIdsLength: usize,
     ) -> DAVEWelcomeResultHandle;
     pub fn daveSessionGetMarshalledKeyPackage(
         session: DAVESessionHandle,

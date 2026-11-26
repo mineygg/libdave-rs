@@ -35,7 +35,7 @@ pub enum DecryptError {
 
 impl EncryptError {
     pub(crate) fn from_code(code: u32) -> Self {
-        use libdave_sys as s;
+        use libdave_rs_sys as s;
         match code {
             s::DAVE_ENCRYPTOR_RESULT_CODE_ENCRYPTION_FAILURE => Self::EncryptionFailure,
             s::DAVE_ENCRYPTOR_RESULT_CODE_MISSING_KEY_RATCHET => Self::MissingKeyRatchet,
@@ -48,7 +48,7 @@ impl EncryptError {
 
 impl DecryptError {
     pub(crate) fn from_code(code: u32) -> Self {
-        use libdave_sys as s;
+        use libdave_rs_sys as s;
         match code {
             s::DAVE_DECRYPTOR_RESULT_CODE_DECRYPTION_FAILURE => Self::DecryptionFailure,
             s::DAVE_DECRYPTOR_RESULT_CODE_MISSING_KEY_RATCHET => Self::MissingKeyRatchet,

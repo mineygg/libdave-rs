@@ -1,5 +1,5 @@
 [package]
-name = "libdave"
+name = "libdave-rs"
 description = "Safe Rust bindings to Discord's DAVE (E2EE audio/video) protocol implementation"
 version.workspace = true
 edition.workspace = true
@@ -13,11 +13,11 @@ categories = ["api-bindings", "cryptography"]
 
 [features]
 default = ["vendored-openssl"]
-vendored-openssl = ["libdave-sys/vendored-openssl"]
-persistent-keys = ["libdave-sys/persistent-keys"]
+vendored-openssl = ["libdave-rs-sys/vendored-openssl"]
+persistent-keys = ["libdave-rs-sys/persistent-keys"]
 
 [dependencies]
-libdave-sys = { path = "../libdave-sys", version = "0.1.0", default-features = false }
+libdave-rs-sys = { path = "../libdave-sys", version = "0.1.0", default-features = false }
 
 [lints]
 workspace = true

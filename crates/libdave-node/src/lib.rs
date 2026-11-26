@@ -1,4 +1,4 @@
-//! Node-API layer over the [`libdave`] crate. Published to npm as `@mineygg/libdave-rs`.
+//! Node-API layer over the [`libdave_rs`] crate. Published to npm as `@mineygg/libdave-rs`.
 // napi's registration code is compiled out under `cfg(test)`, which `clippy --all-targets`
 // would otherwise report as dead code.
 #![cfg_attr(test, allow(dead_code))]
@@ -11,7 +11,7 @@ mod types;
 
 use napi::bindgen_prelude::*;
 
-pub(crate) fn to_napi(error: libdave::Error) -> Error {
+pub(crate) fn to_napi(error: libdave_rs::Error) -> Error {
     Error::from_reason(error.to_string())
 }
 
@@ -39,5 +39,5 @@ pub(crate) fn snowflake(value: Either<String, BigInt>, what: &str) -> Result<u64
 /// Highest DAVE protocol version supported by the bundled libdave.
 #[napi_derive::napi]
 pub fn max_supported_protocol_version() -> u16 {
-    libdave::max_supported_protocol_version()
+    libdave_rs::max_supported_protocol_version()
 }

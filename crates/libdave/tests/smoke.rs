@@ -1,4 +1,4 @@
-use libdave::{
+use libdave_rs::{
     max_supported_protocol_version, Codec, Decryptor, Encryptor, MediaType, Session, SessionManager,
 };
 

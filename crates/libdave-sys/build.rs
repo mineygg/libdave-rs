@@ -24,7 +24,7 @@ fn main() {
         || !nlohmann.join("include").exists()
     {
         panic!(
-            "libdave-sys: vendored sources are missing. Run \
+            "libdave-rs-sys: vendored sources are missing. Run \
              `git submodule update --init` in the repository root."
         );
     }
@@ -53,7 +53,7 @@ fn main() {
         let n = u64::from_str_radix(v.trim_start_matches("0x"), 16).unwrap_or(0x3000_0000);
         assert!(
             n >= 0x3000_0000,
-            "libdave-sys requires OpenSSL >= 3.0 (found {v})"
+            "libdave-rs-sys requires OpenSSL >= 3.0 (found {v})"
         );
     }
 

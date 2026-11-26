@@ -15,7 +15,7 @@ test = false
 doctest = false
 
 [dependencies]
-libdave = { path = "../libdave" }
+libdave-rs = { path = "../libdave" }
 napi = { version = "3", default-features = false, features = ["napi8"] }
 napi-derive = "3"
 

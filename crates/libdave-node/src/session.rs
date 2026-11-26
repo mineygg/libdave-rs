@@ -48,16 +48,16 @@ impl Task for FingerprintTask {
 /// A DAVE MLS session.
 #[napi]
 pub struct Session {
-    inner: Option<libdave::Session>,
+    inner: Option<libdave_rs::Session>,
     failures: Failures,
 }
 
 impl Session {
-    fn get(&self) -> Result<&libdave::Session> {
+    fn get(&self) -> Result<&libdave_rs::Session> {
         self.inner.as_ref().ok_or_else(|| destroyed("Session"))
     }
 
-    fn get_mut(&mut self) -> Result<&mut libdave::Session> {
+    fn get_mut(&mut self) -> Result<&mut libdave_rs::Session> {
         self.inner.as_mut().ok_or_else(|| destroyed("Session"))
     }
 }
@@ -67,7 +67,7 @@ impl Session {
     #[napi(constructor)]
     pub fn new(auth_session_id: Option<String>) -> Result<Self> {
         let failures = Failures::default();
-        let inner = libdave::Session::new(auth_session_id.as_deref(), Some(failures.handler()))
+        let inner = libdave_rs::Session::new(auth_session_id.as_deref(), Some(failures.handler()))
             .map_err(to_napi)?;
         Ok(Self {
             inner: Some(inner),

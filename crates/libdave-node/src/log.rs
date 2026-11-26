@@ -24,19 +24,19 @@ pub struct LogEntry {
 #[napi(ts_args_type = "callback?: ((entry: LogEntry) => void) | null")]
 pub fn set_log_sink(callback: Option<Function<'_, LogEntry, ()>>) -> Result<()> {
     let Some(callback) = callback else {
-        libdave::set_log_sink(None);
+        libdave_rs::set_log_sink(None);
         return Ok(());
     };
     let sink = callback
         .build_threadsafe_function()
         .weak::<true>()
         .build()?;
-    libdave::set_log_sink(Some(Box::new(move |severity, file, line, message| {
+    libdave_rs::set_log_sink(Some(Box::new(move |severity, file, line, message| {
         let severity = match severity {
-            libdave::LogSeverity::Verbose => LogSeverity::Verbose,
-            libdave::LogSeverity::Info => LogSeverity::Info,
-            libdave::LogSeverity::Warning => LogSeverity::Warning,
-            libdave::LogSeverity::Error => LogSeverity::Error,
+            libdave_rs::LogSeverity::Verbose => LogSeverity::Verbose,
+            libdave_rs::LogSeverity::Info => LogSeverity::Info,
+            libdave_rs::LogSeverity::Warning => LogSeverity::Warning,
+            libdave_rs::LogSeverity::Error => LogSeverity::Error,
         };
         sink.call(
             LogEntry {

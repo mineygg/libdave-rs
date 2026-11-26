@@ -1,5 +1,5 @@
 [package]
-name = "libdave-sys"
+name = "libdave-rs-sys"
 description = "Raw FFI bindings to Discord's libdave (DAVE E2EE), built from vendored sources"
 version.workspace = true
 edition.workspace = true

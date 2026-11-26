@@ -33,6 +33,14 @@ CommonJS `require` works too. The lower-level `Session`, `Encryptor`,
 `Decryptor` and `KeyRatchet` classes are also exported. MLS failures are read
 with `takeFailures()`.
 
+## Rust
+
+The same library is on crates.io:
+
+```sh
+cargo add libdave-rs
+```
+
 ## Platforms
 
 Each is published as `@mineygg/libdave-rs-<platform>`.
@@ -51,7 +59,7 @@ Each is published as `@mineygg/libdave-rs-<platform>`.
 | `src/`                                 | TypeScript entry point, bundled with tsup (ESM and CJS) |
 | `npm/`                                 | One small package per platform                          |
 | `crates/libdave-node`                  | Node-API layer                                          |
-| `crates/libdave`, `crates/libdave-sys` | Internal safe wrapper and FFI build of libdave          |
+| `crates/libdave`, `crates/libdave-sys` | The `libdave-rs` and `libdave-rs-sys` Rust crates       |
 
 ## Development
 
@@ -71,8 +79,8 @@ Git hooks are managed by lefthook.
 ## Releasing
 
 Set the `NPM_TOKEN` and `CARGO_REGISTRY_TOKEN` repository secrets, then run the
-commands below. This publishes the npm packages and the `libdave-sys` and
-`libdave` crates.
+commands below. This publishes the npm packages and the `libdave-rs-sys` and
+`libdave-rs` crates.
 
 ```sh
 npm version patch   # also bumps the platform packages and crates
@@ -81,6 +89,6 @@ git push --follow-tags
 
 ## License
 
-This project is MIT licensed. The published binaries and `libdave-sys` include
+This project is MIT licensed. The published binaries and `libdave-rs-sys` include
 third-party code under its own terms, listed in `THIRD_PARTY_LICENSES`. After
 changing dependencies or submodules, run `npm run licenses`.

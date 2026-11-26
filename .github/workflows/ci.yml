@@ -95,7 +95,7 @@ jobs:
           key: test
           cache-on-failure: true
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: cargo test -p libdave -p libdave-sys --locked
+      - run: cargo test -p libdave-rs -p libdave-rs-sys --locked
 
   licenses:
     name: license notices
@@ -121,7 +121,7 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       # Packages both crates and compiles them from the packaged files.
-      - run: cargo publish --dry-run --locked -p libdave-sys -p libdave
+      - run: cargo publish --dry-run --locked -p libdave-rs-sys -p libdave-rs
 
   build:
     name: build

@@ -18,18 +18,18 @@ pub struct MlsWelcomeResult {
 /// Voice-gateway level DAVE bookkeeping: transitions, epochs, encryptor and decryptors.
 #[napi]
 pub struct DaveSessionManager {
-    inner: Option<libdave::SessionManager>,
+    inner: Option<libdave_rs::SessionManager>,
     failures: Failures,
 }
 
 impl DaveSessionManager {
-    fn get(&self) -> Result<&libdave::SessionManager> {
+    fn get(&self) -> Result<&libdave_rs::SessionManager> {
         self.inner
             .as_ref()
             .ok_or_else(|| destroyed("DaveSessionManager"))
     }
 
-    fn get_mut(&mut self) -> Result<&mut libdave::SessionManager> {
+    fn get_mut(&mut self) -> Result<&mut libdave_rs::SessionManager> {
         self.inner
             .as_mut()
             .ok_or_else(|| destroyed("DaveSessionManager"))
@@ -42,8 +42,9 @@ impl DaveSessionManager {
     pub fn new(self_user_id: String, group_id: Either<String, BigInt>) -> Result<Self> {
         let group_id = snowflake(group_id, "groupId")?;
         let failures = Failures::default();
-        let inner = libdave::SessionManager::new(self_user_id, group_id, Some(failures.handler()))
-            .map_err(to_napi)?;
+        let inner =
+            libdave_rs::SessionManager::new(self_user_id, group_id, Some(failures.handler()))
+                .map_err(to_napi)?;
         Ok(Self {
             inner: Some(inner),
             failures,

@@ -18,7 +18,7 @@ mod util;
 use std::os::raw::{c_char, c_int};
 use std::sync::RwLock;
 
-use libdave_sys as sys;
+use libdave_rs_sys as sys;
 
 pub use crypto::{Decryptor, DecryptorStats, Encryptor, EncryptorStats, KeyRatchet};
 pub use error::{DecryptError, EncryptError, Error, Result};

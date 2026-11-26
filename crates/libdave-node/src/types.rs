@@ -9,7 +9,7 @@ pub enum MediaType {
     Video = 1,
 }
 
-impl From<MediaType> for libdave::MediaType {
+impl From<MediaType> for libdave_rs::MediaType {
     fn from(value: MediaType) -> Self {
         match value {
             MediaType::Audio => Self::Audio,
@@ -30,7 +30,7 @@ pub enum Codec {
     Av1 = 6,
 }
 
-impl From<Codec> for libdave::Codec {
+impl From<Codec> for libdave_rs::Codec {
     fn from(value: Codec) -> Self {
         match value {
             Codec::Unknown => Self::Unknown,
@@ -56,8 +56,8 @@ pub struct EncryptStats {
     pub duration: f64,
 }
 
-impl From<libdave::EncryptorStats> for EncryptStats {
-    fn from(s: libdave::EncryptorStats) -> Self {
+impl From<libdave_rs::EncryptorStats> for EncryptStats {
+    fn from(s: libdave_rs::EncryptorStats) -> Self {
         Self {
             success: s.encryptSuccessCount as f64,
             failure: s.encryptFailureCount as f64,
@@ -82,8 +82,8 @@ pub struct DecryptStats {
     pub duration: f64,
 }
 
-impl From<libdave::DecryptorStats> for DecryptStats {
-    fn from(s: libdave::DecryptorStats) -> Self {
+impl From<libdave_rs::DecryptorStats> for DecryptStats {
+    fn from(s: libdave_rs::DecryptorStats) -> Self {
         Self {
             success: s.decryptSuccessCount as f64,
             failure: s.decryptFailureCount as f64,
@@ -110,7 +110,7 @@ pub(crate) struct Failures(Arc<Mutex<Vec<MlsFailure>>>);
 impl Failures {
     const LIMIT: usize = 64;
 
-    pub(crate) fn handler(&self) -> libdave::FailureHandler {
+    pub(crate) fn handler(&self) -> libdave_rs::FailureHandler {
         let queue = self.clone();
         Box::new(move |source, reason| {
             if let Ok(mut items) = queue.0.lock() {

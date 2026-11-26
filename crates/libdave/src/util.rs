@@ -20,7 +20,7 @@ pub(crate) unsafe fn take_bytes(ptr: *mut u8, len: usize) -> Option<Vec<u8>> {
     } else {
         unsafe { std::slice::from_raw_parts(ptr, len) }.to_vec()
     };
-    unsafe { libdave_sys::daveFree(ptr.cast::<c_void>()) };
+    unsafe { libdave_rs_sys::daveFree(ptr.cast::<c_void>()) };
     Some(v)
 }
 
@@ -37,7 +37,7 @@ pub(crate) unsafe fn take_u64s(ptr: *mut u64, len: usize) -> Vec<u64> {
     } else {
         unsafe { std::slice::from_raw_parts(ptr, len) }.to_vec()
     };
-    unsafe { libdave_sys::daveFree(ptr.cast::<c_void>()) };
+    unsafe { libdave_rs_sys::daveFree(ptr.cast::<c_void>()) };
     v
 }
 

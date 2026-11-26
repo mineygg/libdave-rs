@@ -166,24 +166,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "65cd87c9a6d60536580b316ad985726104730a5151c99845f2490428ef91240a"
 
 [[package]]
-name = "libdave"
-version = "0.1.0"
-dependencies = [
- "libdave-sys",
-]
-
-[[package]]
 name = "libdave-node"
 version = "0.1.0"
 dependencies = [
- "libdave",
+ "libdave-rs",
  "napi",
  "napi-build",
  "napi-derive",
 ]
 
 [[package]]
-name = "libdave-sys"
+name = "libdave-rs"
+version = "0.1.0"
+dependencies = [
+ "libdave-rs-sys",
+]
+
+[[package]]
+name = "libdave-rs-sys"
 version = "0.1.0"
 dependencies = [
  "cc",

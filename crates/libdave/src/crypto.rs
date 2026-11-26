@@ -1,4 +1,4 @@
-use libdave_sys as sys;
+use libdave_rs_sys as sys;
 
 use crate::error::{DecryptError, EncryptError, Error, Result};
 use crate::{Codec, MediaType};

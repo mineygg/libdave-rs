@@ -7,21 +7,21 @@ use crate::{destroyed, to_napi};
 /// Per-user media key ratchet, obtained from `Session.getKeyRatchet`.
 #[napi]
 pub struct KeyRatchet {
-    pub(crate) inner: libdave::KeyRatchet,
+    pub(crate) inner: libdave_rs::KeyRatchet,
 }
 
 /// Encrypts outgoing media frames.
 #[napi]
 pub struct Encryptor {
-    inner: Option<libdave::Encryptor>,
+    inner: Option<libdave_rs::Encryptor>,
 }
 
 impl Encryptor {
-    fn get(&self) -> Result<&libdave::Encryptor> {
+    fn get(&self) -> Result<&libdave_rs::Encryptor> {
         self.inner.as_ref().ok_or_else(|| destroyed("Encryptor"))
     }
 
-    fn get_mut(&mut self) -> Result<&mut libdave::Encryptor> {
+    fn get_mut(&mut self) -> Result<&mut libdave_rs::Encryptor> {
         self.inner.as_mut().ok_or_else(|| destroyed("Encryptor"))
     }
 }
@@ -31,7 +31,7 @@ impl Encryptor {
     #[napi(constructor)]
     pub fn new() -> Result<Self> {
         Ok(Self {
-            inner: Some(libdave::Encryptor::new().map_err(to_napi)?),
+            inner: Some(libdave_rs::Encryptor::new().map_err(to_napi)?),
         })
     }
 
@@ -92,11 +92,11 @@ impl Encryptor {
 /// Decrypts media frames from one remote sender.
 #[napi]
 pub struct Decryptor {
-    inner: Option<libdave::Decryptor>,
+    inner: Option<libdave_rs::Decryptor>,
 }
 
 impl Decryptor {
-    fn get_mut(&mut self) -> Result<&mut libdave::Decryptor> {
+    fn get_mut(&mut self) -> Result<&mut libdave_rs::Decryptor> {
         self.inner.as_mut().ok_or_else(|| destroyed("Decryptor"))
     }
 }
@@ -106,7 +106,7 @@ impl Decryptor {
     #[napi(constructor)]
     pub fn new() -> Result<Self> {
         Ok(Self {
-            inner: Some(libdave::Decryptor::new().map_err(to_napi)?),
+            inner: Some(libdave_rs::Decryptor::new().map_err(to_napi)?),
         })
     }
 

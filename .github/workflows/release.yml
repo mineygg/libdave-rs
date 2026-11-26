@@ -64,7 +64,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Check that the tag matches Cargo.toml
         run: grep -qxF "version = \"${GITHUB_REF_NAME#v}\"" Cargo.toml
-      # Publishes `libdave-sys` first, then `libdave`.
-      - run: cargo publish --locked -p libdave-sys -p libdave
+      # Publishes `libdave-rs-sys` first, then `libdave-rs`.
+      - run: cargo publish --locked -p libdave-rs-sys -p libdave-rs
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

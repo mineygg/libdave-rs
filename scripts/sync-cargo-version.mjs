@@ -22,11 +22,11 @@ function replace(path, pattern, expected) {
 replace('Cargo.toml', /(\[workspace\.package\]\nversion = ")[^"]+(")/g, 1);
 replace(
   'crates/libdave/Cargo.toml',
-  /(libdave-sys = \{[^}]*version = ")[^"]+(")/g,
+  /(libdave-rs-sys = \{[^}]*version = ")[^"]+(")/g,
   1,
 );
 replace(
   'Cargo.lock',
-  /(name = "libdave(?:-sys|-node)?"\nversion = ")[^"]+(")/g,
+  /(name = "libdave-(?:rs|rs-sys|node)"\nversion = ")[^"]+(")/g,
   3,
 );

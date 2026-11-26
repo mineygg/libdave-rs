@@ -3,7 +3,7 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::ptr;
 use std::sync::mpsc::{channel, Receiver, Sender};
 
-use libdave_sys as sys;
+use libdave_rs_sys as sys;
 
 use crate::crypto::KeyRatchet;
 use crate::error::{Error, Result};

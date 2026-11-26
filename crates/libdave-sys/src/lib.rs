@@ -2,7 +2,7 @@
 //! (`dave/dave.h`).
 //!
 //! libdave, mlspp and (by default) OpenSSL are compiled from source and linked statically.
-//! Use the safe `libdave` crate unless you really need the raw interface.
+//! Use the safe `libdave-rs` crate unless you really need the raw interface.
 #![allow(non_upper_case_globals, non_camel_case_types, non_snake_case)]
 
 // Make sure openssl-sys (and therefore libssl/libcrypto) ends up on the link line.

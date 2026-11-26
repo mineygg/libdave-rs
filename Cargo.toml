@@ -1,11 +1,11 @@
 [workspace]
 resolver = "2"
-members = ["crates/libdave-sys", "crates/libdave", "crates/dave-cli"]
+members = ["crates/libdave-sys", "crates/libdave", "crates/libdave-node"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.74"
+rust-version = "1.88"
 license = "MIT"
 authors = ["mineygg"]
 repository = "https://github.com/mineygg/libdave-rs"

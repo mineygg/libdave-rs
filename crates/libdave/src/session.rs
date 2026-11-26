@@ -1,6 +1,7 @@
 use std::os::raw::{c_char, c_void};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::ptr;
+use std::sync::mpsc::{channel, Receiver, Sender};
 
 use libdave_sys as sys;
 
@@ -227,27 +228,45 @@ impl Session {
         }
     }
 
-    /// Computes the pairwise identity fingerprint with `user_id`.
-    pub fn pairwise_fingerprint(&self, version: u16, user_id: &str) -> Result<Vec<u8>> {
-        unsafe extern "C" fn collect(fp: *const u8, len: usize, user_data: *mut c_void) {
-            let out = unsafe { &mut *user_data.cast::<Vec<u8>>() };
-            if !fp.is_null() && len > 0 {
-                out.extend_from_slice(unsafe { std::slice::from_raw_parts(fp, len) });
-            }
+    /// Starts computing the pairwise identity fingerprint with `user_id`.
+    ///
+    /// libdave derives it on a background thread; the returned channel yields it exactly once.
+    /// An empty vector means it could not be computed (no group yet, or unknown user).
+    pub fn request_pairwise_fingerprint(
+        &self,
+        version: u16,
+        user_id: &str,
+    ) -> Result<Receiver<Vec<u8>>> {
+        unsafe extern "C" fn deliver(fp: *const u8, len: usize, user_data: *mut c_void) {
+            // SAFETY: `user_data` is the boxed sender below; libdave calls us exactly once.
+            let tx = unsafe { Box::from_raw(user_data.cast::<Sender<Vec<u8>>>()) };
+            let bytes = if fp.is_null() || len == 0 {
+                Vec::new()
+            } else {
+                unsafe { std::slice::from_raw_parts(fp, len) }.to_vec()
+            };
+            let _ = tx.send(bytes);
         }
         let id = cstring(user_id, "user id")?;
-        let mut out: Vec<u8> = Vec::new();
-        // The callback is invoked synchronously by libdave.
+        let (tx, rx) = channel::<Vec<u8>>();
         unsafe {
             sys::daveSessionGetPairwiseFingerprint(
                 self.raw,
                 version,
                 id.as_ptr(),
-                collect,
-                (&mut out as *mut Vec<u8>).cast(),
+                deliver,
+                Box::into_raw(Box::new(tx)).cast(),
             )
         };
-        Ok(out)
+        Ok(rx)
+    }
+
+    /// Blocking convenience wrapper around [`Session::request_pairwise_fingerprint`].
+    pub fn pairwise_fingerprint(&self, version: u16, user_id: &str) -> Result<Vec<u8>> {
+        Ok(self
+            .request_pairwise_fingerprint(version, user_id)?
+            .recv()
+            .unwrap_or_default())
     }
 }
 

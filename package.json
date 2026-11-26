@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json.schemastore.org/package",
+  "name": "@mineygg/libdave-rs",
+  "version": "0.1.0",
+  "description": "Prebuilt Node.js bindings (Rust, Node-API) for Discord's official libdave",
+  "license": "MIT",
+  "author": "mineygg",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mineygg/libdave-rs.git"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "binding.cjs",
+    "binding.d.cts"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "napi": {
+    "binaryName": "libdave",
+    "packageName": "@mineygg/libdave-rs",
+    "constEnum": false,
+    "targets": [
+      "x86_64-unknown-linux-gnu",
+      "aarch64-unknown-linux-gnu",
+      "armv7-unknown-linux-gnueabihf",
+      "x86_64-unknown-linux-musl",
+      "aarch64-unknown-linux-musl",
+      "armv7-unknown-linux-musleabihf",
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "x86_64-pc-windows-msvc",
+      "aarch64-pc-windows-msvc"
+    ]
+  },
+  "scripts": {
+    "build": "npm run build:native && npm run build:ts",
+    "build:native": "napi build --platform --release --manifest-path crates/libdave-node/Cargo.toml --output-dir . --js binding.cjs --dts binding.d.cts",
+    "build:ts": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check --error-on-warnings .",
+    "lint:fix": "biome check --write .",
+    "test": "vitest run",
+    "test:pack": "node scripts/test-pack.mjs",
+    "create-npm-dirs": "napi create-npm-dirs",
+    "artifacts": "napi artifacts --output-dir artifacts --npm-dir npm",
+    "version": "napi version && git add npm",
+    "prepublishOnly": "napi prepublish --tag-style npm --no-gh-release",
+    "prepare": "lefthook install || exit 0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.9",
+    "@napi-rs/cli": "^3.11.1",
+    "@types/node": "^22.20.7",
+    "lefthook": "^2.2.3",
+    "tsup": "^8.5.1",
+    "typescript": "~5.9",
+    "vitest": "^4.1.12"
+  }
+}

@@ -1,9 +1,11 @@
 name: Release
 
+# Pushing a `v<version>` tag builds every platform and publishes to npm.
+# Requires the `NPM_TOKEN` repository secret.
+
 on:
   push:
     tags: ["v*"]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -13,26 +15,34 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       retention-days: 30
-    permissions:
-      contents: write
 
   publish:
-    name: Publish GitHub release
+    name: Publish to npm
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - name: Check that the tag matches package.json
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
       - uses: actions/download-artifact@v8
         with:
-          pattern: dave-cli-*
-          path: dist
-          merge-multiple: true
-      - name: Checksums
-        working-directory: dist
-        run: sha256sum -- * > SHA256SUMS.txt
-      - uses: softprops/action-gh-release@v3
+          pattern: bindings-*
+          path: artifacts
+      - uses: actions/download-artifact@v8
         with:
-          files: dist/*
-          generate_release_notes: true
+          name: js-binding
+      - run: npm run artifacts
+      - name: Require all ten binaries
+        run: test "$(find npm -name '*.node' | wc -l)" -eq 10
+      - run: npm run build:ts
+      # `prepublishOnly` publishes the platform packages first and adds them to
+      # the umbrella package's optionalDependencies.
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

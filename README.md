@@ -1,28 +1,78 @@
-# libdave-rs
+# @mineygg/libdave-rs
 
-Rust bindings to Discord's [DAVE](https://github.com/discord/libdave) end-to-end encryption
-(MLS + per-frame media encryption) for voice/video.
-
-| Crate | What it is |
-|-------|-----------|
-| `libdave-sys` | Raw FFI. `build.rs` compiles libdave + mlspp + nlohmann/json from pinned git submodules (no CMake) and links OpenSSL (vendored by default). |
-| `libdave` | Safe wrappers (`Session`, `Encryptor`, `Decryptor`, `KeyRatchet`) plus `SessionManager`, the voice-gateway transition/epoch logic ported from cherrycord's `vocalize`. |
-| `dave-cli` | Small binary (`version`, `selftest`, `keypackage`) built for every platform by CI. |
-
-## Building
+Prebuilt Node.js bindings for Discord's official
+[libdave](https://github.com/discord/libdave) (DAVE end-to-end encryption for
+voice and video), written in Rust with [napi-rs](https://napi.rs).
 
 ```sh
-git clone --recurse-submodules <repo>   # or: git submodule update --init
-cargo build --release
+npm install @mineygg/libdave-rs
 ```
 
-Needs a C++17 compiler, Perl and make (for vendored OpenSSL). Feature flags on `libdave`/`libdave-sys`:
-`vendored-openssl` (default; disable to link a system OpenSSL >= 3) and `persistent-keys`.
+npm installs only the binary for your machine, through `optionalDependencies`.
+No compiler is needed.
 
-## CI
+## Usage
 
-* `ci.yml` - actionlint, rustfmt, clippy (`-D warnings`), rustdoc, tests on Linux/macOS/Windows, and the cross-build matrix.
-* `build.yml` - reusable cross-compile matrix: Linux gnu/musl x64, arm64, armv7 via `cargo-zigbuild`; macOS arm64/x64; Windows x64/arm64. Each binary runs `dave-cli selftest` (natively or under qemu-user).
-* `release.yml` - on `v*` tags, builds everything and publishes archives + `SHA256SUMS.txt`.
+```ts
+import {
+  DaveSessionManager,
+  MediaType,
+  maxSupportedProtocolVersion,
+} from '@mineygg/libdave-rs';
 
-Rust builds are cached with `Swatinem/rust-cache` (per target).
+const dave = new DaveSessionManager(selfUserId, channelId);
+dave.addUser(otherUserId);
+dave.onSelectProtocolAck(maxSupportedProtocolVersion());
+const keyPackage = dave.getMarshalledKeyPackage(); // send to the voice gateway
+
+const encrypted = dave.encrypt(MediaType.Audio, ssrc, opusFrame); // Buffer | null
+const plain = dave.decrypt(MediaType.Audio, otherUserId, received); // Buffer | null
+```
+
+CommonJS `require` works too. The lower-level `Session`, `Encryptor`,
+`Decryptor` and `KeyRatchet` classes are also exported. MLS failures are read
+with `takeFailures()`.
+
+## Platforms
+
+Each is published as `@mineygg/libdave-rs-<platform>`.
+
+| OS            | x64              | arm64              | armv7                  |
+| ------------- | ---------------- | ------------------ | ---------------------- |
+| Linux (glibc) | `linux-x64-gnu`  | `linux-arm64-gnu`  | `linux-arm-gnueabihf`  |
+| Linux (musl)  | `linux-x64-musl` | `linux-arm64-musl` | `linux-arm-musleabihf` |
+| macOS         | `darwin-x64`     | `darwin-arm64`     |                        |
+| Windows       | `win32-x64-msvc` | `win32-arm64-msvc` |                        |
+
+## Layout
+
+| Path                                   | What it is                                              |
+| -------------------------------------- | ------------------------------------------------------- |
+| `src/`                                 | TypeScript entry point, bundled with tsup (ESM and CJS) |
+| `npm/`                                 | One small package per platform                          |
+| `crates/libdave-node`                  | Node-API layer                                          |
+| `crates/libdave`, `crates/libdave-sys` | Internal safe wrapper and FFI build of libdave          |
+
+## Development
+
+```sh
+git submodule update --init
+npm ci
+npm run build      # native addon (needs Rust, C++17, Perl, make) + TypeScript
+npm test           # vitest
+npm run lint       # biome
+npm run typecheck
+```
+
+To work on TypeScript only, download the `bindings-<platform>` and `js-binding`
+artifacts from a CI run into the repository root and skip the native build.
+Git hooks are managed by lefthook.
+
+## Releasing
+
+Set the `NPM_TOKEN` repository secret, then:
+
+```sh
+npm version patch   # also bumps the platform packages
+git push --follow-tags
+```

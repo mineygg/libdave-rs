@@ -1,0 +1,30 @@
+{
+  "name": "@mineygg/libdave-rs-linux-x64-musl",
+  "version": "0.1.0",
+  "cpu": [
+    "x64"
+  ],
+  "main": "libdave.linux-x64-musl.node",
+  "files": [
+    "libdave.linux-x64-musl.node"
+  ],
+  "description": "Prebuilt Node.js bindings (Rust, Node-API) for Discord's official libdave",
+  "author": "mineygg",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mineygg/libdave-rs.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "os": [
+    "linux"
+  ],
+  "libc": [
+    "musl"
+  ]
+}

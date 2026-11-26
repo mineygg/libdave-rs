@@ -45,9 +45,12 @@ try {
     join(work, 'check.cjs'),
     `const m = require('@mineygg/libdave-rs');\n${check}\n`,
   );
-  for (const name of ['libdave-rs', `libdave-rs-${platform}`]) {
+  for (const [scope, name] of [
+    ['@mineygg', 'libdave-rs'],
+    ['@mineygg-core', `libdave-rs-${platform}`],
+  ]) {
     for (const file of ['LICENSE', 'THIRD_PARTY_LICENSES']) {
-      const path = join(work, 'node_modules', '@mineygg', name, file);
+      const path = join(work, 'node_modules', scope, name, file);
       if (!existsSync(path)) throw new Error(`${name} is missing ${file}`);
     }
   }

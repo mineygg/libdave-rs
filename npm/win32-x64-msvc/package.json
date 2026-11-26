@@ -1,6 +1,6 @@
 {
-  "name": "@mineygg/libdave-rs-win32-x64-msvc",
-  "version": "0.1.1",
+  "name": "@mineygg-core/libdave-rs-win32-x64-msvc",
+  "version": "0.1.2",
   "cpu": [
     "x64"
   ],

@@ -1,6 +1,6 @@
 {
-  "name": "@mineygg/libdave-rs-linux-arm-musleabihf",
-  "version": "0.1.1",
+  "name": "@mineygg-core/libdave-rs-linux-arm-musleabihf",
+  "version": "0.1.2",
   "cpu": [
     "arm"
   ],

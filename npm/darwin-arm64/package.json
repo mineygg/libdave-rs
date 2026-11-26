@@ -1,6 +1,6 @@
 {
-  "name": "@mineygg/libdave-rs-darwin-arm64",
-  "version": "0.1.1",
+  "name": "@mineygg-core/libdave-rs-darwin-arm64",
+  "version": "0.1.2",
   "cpu": [
     "arm64"
   ],

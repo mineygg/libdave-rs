@@ -49,7 +49,7 @@ cargo add libdave-rs
 
 ## Platforms
 
-Each is published as `@mineygg/libdave-rs-<platform>`.
+Each is published as `@mineygg-core/libdave-rs-<platform>`.
 
 | OS            | x64              | arm64              | armv7                  |
 | ------------- | ---------------- | ------------------ | ---------------------- |

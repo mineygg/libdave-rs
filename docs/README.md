@@ -19,7 +19,7 @@ The Node.js reference follows the repository's current `src/index.ts` exports an
 
 The Rust section describes the public crate exports visible in `crates/libdave/src/lib.rs`. It is intentionally an overview rather than a fabricated signature-by-signature Rust reference. For exact Rust signatures and rustdoc, consult the crate source and generated rustdoc for the checked-out revision.
 
-**Version context:** the repository metadata inspected for this documentation reports npm version `0.1.1`. APIs can change between revisions; regenerate or verify this reference when publishing a new release.
+**Version context:** the repository metadata inspected for this documentation reports npm version `0.1.2`. APIs can change between revisions; regenerate or verify this reference when publishing a new release.
 
 ## Links
 

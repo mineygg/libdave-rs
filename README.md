@@ -76,6 +76,7 @@ npm run build      # native addon (needs Rust, C++17, Perl, make) + TypeScript
 npm test           # vitest
 npm run lint       # biome
 npm run typecheck
+npm run test:upstream  # Discord's libdave tests, see tests/upstream
 ```
 
 To work on TypeScript only, download the `bindings-<platform>` and `js-binding`

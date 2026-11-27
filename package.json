@@ -79,6 +79,7 @@
     "lint:fix": "biome check --write .",
     "test": "vitest run",
     "test:pack": "node scripts/test-pack.mjs",
+    "test:upstream": "node scripts/upstream-tests.mjs",
     "create-npm-dirs": "napi create-npm-dirs",
     "artifacts": "napi artifacts --output-dir artifacts --npm-dir npm",
     "version": "napi version && node scripts/sync-cargo-version.mjs && git add npm Cargo.toml Cargo.lock crates/libdave/Cargo.toml",

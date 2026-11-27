@@ -1,3 +1,3 @@
-# `@mineygg/libdave-rs-linux-x64-gnu`
+# `@mineygg-core/libdave-rs-linux-x64-gnu`
 
 This is the **x86_64-unknown-linux-gnu** binary for `@mineygg/libdave-rs`

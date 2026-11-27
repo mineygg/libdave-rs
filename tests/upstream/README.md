@@ -38,3 +38,9 @@ pinned commit or has local changes.
 When updating the submodule, compare `CMakeLists.txt` here with upstream's
 `cpp/test/CMakeLists.txt` and `cpp/test/capi/CMakeLists.txt`, and with the
 include paths in `build.rs`.
+
+## Badge
+
+The test run writes its counts to `target/upstream-tests/results.json`. On `main`,
+CI publishes them with the build count to the `badges` branch, which the README
+badges read.

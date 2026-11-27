@@ -1,7 +1,7 @@
 // Runs Discord's own libdave tests against the libraries this repository builds.
 // Only the pinned submodule is used; nothing is downloaded.
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
@@ -71,4 +71,49 @@ run('cmake', [
   `-DOPENSSL_INSTALL_LIB_DIR=${openssl}`,
 ]);
 run('cmake', ['--build', build, '--parallel']);
-run('ctest', ['--test-dir', build, '--output-on-failure']);
+
+// Counts for the README badge. GoogleTest writes its own report; the C API tests
+// only print a summary, which ctest keeps in its log.
+const gtestReport = join(build, 'gtest.json');
+const ctestLog = join(build, 'Testing', 'Temporary', 'LastTest.log');
+const results = join(build, 'results.json');
+for (const file of [gtestReport, ctestLog, results]) {
+  rmSync(file, { force: true });
+}
+try {
+  execFileSync('ctest', ['--test-dir', build, '--output-on-failure'], {
+    cwd: root,
+    stdio: 'inherit',
+    env: { ...process.env, GTEST_OUTPUT: `json:${gtestReport}` },
+  });
+} finally {
+  writeResults();
+}
+
+function writeResults() {
+  let passed = 0;
+  let total = 0;
+  let suites = 0;
+  if (existsSync(gtestReport)) {
+    const report = JSON.parse(readFileSync(gtestReport, 'utf8'));
+    const ran = report.testsuites
+      .flatMap((suite) => suite.testsuite)
+      .filter((test) => test.result === 'COMPLETED');
+    passed += ran.filter((test) => !test.failures).length;
+    total += ran.length;
+    suites += 1;
+  }
+  const capi =
+    existsSync(ctestLog) &&
+    /^Passed: (\d+)\s+Failed: \d+\s+Total:\s+(\d+)/m.exec(
+      readFileSync(ctestLog, 'utf8'),
+    );
+  if (capi) {
+    passed += Number(capi[1]);
+    total += Number(capi[2]);
+    suites += 1;
+  }
+  const complete = suites === 2;
+  writeFileSync(results, `${JSON.stringify({ passed, total, complete })}\n`);
+  console.log(`Upstream tests: ${passed}/${total} passed`);
+}

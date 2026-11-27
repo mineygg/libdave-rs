@@ -95,7 +95,19 @@ jobs:
           key: test
           cache-on-failure: true
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: cargo test -p libdave-rs -p libdave-rs-sys --locked
+      # The log is what the README's test badge is counted from.
+      - name: cargo test
+        shell: bash # pipefail, so a test failure still fails the step
+        run: >
+          cargo test -p libdave-rs -p libdave-rs-sys --locked --no-fail-fast 2>&1
+          | tee rust-test.log
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: rust-test-results
+          path: rust-test.log
+          if-no-files-found: ignore
+          retention-days: 7
 
   upstream-tests:
     name: libdave upstream tests
@@ -181,14 +193,23 @@ jobs:
           name: js-binding
       - run: npm run build:ts
       - run: npm run typecheck
-      - run: npm test
+      - run: >
+          npm test -- --reporter=default --reporter=json
+          --outputFile.json=node-${{ matrix.platform }}.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: node-results-${{ matrix.platform }}
+          path: node-${{ matrix.platform }}.json
+          if-no-files-found: ignore
+          retention-days: 7
       - run: npm run test:pack
 
   # Publishes the numbers behind the README badges to the `badges` branch.
   badges:
     name: status badges
     # Runs after failures too, so the badges can show them.
-    needs: [build, upstream-tests]
+    needs: [build, upstream-tests, rust-test, test]
     if: ${{ !cancelled() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
     permissions:
@@ -201,11 +222,24 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 26
-      - name: Download test results
+      - name: Download libdave test results
         uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           name: upstream-results
+          path: results
+      - name: Download Rust test results
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: rust-test-results
+          path: results
+      - name: Download Node test results
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          pattern: node-results-*
+          merge-multiple: true
           path: results
       - name: List this run's jobs
         shell: bash # pipefail, so an API error fails the step
@@ -214,14 +248,14 @@ jobs:
           "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?filter=latest&per_page=100"
           --jq '.jobs[]' | jq -s . > jobs.json
       - name: Write badge files
-        run: node scripts/badges.mjs jobs.json results/results.json badges
+        run: node scripts/badges.mjs jobs.json results badges
       - name: Push the badges branch
         working-directory: badges
         run: |
           git init -q -b badges
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add builds.json tests.json
+          git add builds.json tests.json suite.json
           git commit -q -m 'ci: update status badges'
           # The branch only ever holds the latest numbers.
           auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)

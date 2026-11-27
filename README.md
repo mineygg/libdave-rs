@@ -1,6 +1,7 @@
 # @mineygg/libdave-rs
 
 [![builds](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmineygg%2Flibdave-rs%2Fbadges%2Fbuilds.json)](https://github.com/mineygg/libdave-rs/actions/workflows/ci.yml?query=branch%3Amain)
+[![tests](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmineygg%2Flibdave-rs%2Fbadges%2Fsuite.json)](https://github.com/mineygg/libdave-rs/actions/workflows/ci.yml?query=branch%3Amain)
 [![libdave tests](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmineygg%2Flibdave-rs%2Fbadges%2Ftests.json)](https://github.com/mineygg/libdave-rs/actions/workflows/ci.yml?query=branch%3Amain)
 
 Prebuilt Node.js bindings for Discord's official

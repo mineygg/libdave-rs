@@ -43,4 +43,5 @@ include paths in `build.rs`.
 
 The test run writes its counts to `target/upstream-tests/results.json`. On `main`,
 CI publishes them with the build count to the `badges` branch, which the README
-badges read.
+badges read. The separate `tests` badge counts this repository's own Rust and
+Node tests.

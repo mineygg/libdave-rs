@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package",
   "name": "@mineygg/libdave-rs",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Prebuilt Node.js bindings (Rust, Node-API) for Discord's official libdave",
   "keywords": [
     "dave",

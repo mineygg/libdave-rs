@@ -28,6 +28,7 @@ The safe crate's root exports, as observed in `crates/libdave/src/lib.rs`, inclu
 - `CommitOutcome`
 - `WelcomeOutcome`
 - `FailureHandler`
+- `ProtocolVersionHandler`
 - `EncryptorStats`
 - `DecryptorStats`
 - `Error`, `Result`, `EncryptError`, and `DecryptError`

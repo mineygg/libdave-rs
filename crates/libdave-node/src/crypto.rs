@@ -1,4 +1,5 @@
 use napi::bindgen_prelude::*;
+use napi::threadsafe_function::ThreadsafeFunctionCallMode;
 use napi_derive::napi;
 
 use crate::types::{Codec, DecryptStats, EncryptStats, MediaType};
@@ -60,6 +61,41 @@ impl Encryptor {
     #[napi(getter)]
     pub fn protocol_version(&self) -> Result<u16> {
         Ok(self.get()?.protocol_version())
+    }
+
+    /// Calls `callback` whenever `protocolVersion` changes; pass `null` to remove it.
+    /// It is delivered asynchronously and does not keep the event loop alive.
+    #[napi(ts_args_type = "callback?: (() => void) | null")]
+    pub fn set_protocol_version_changed_callback(
+        &mut self,
+        callback: Option<Function<'_, (), ()>>,
+    ) -> Result<()> {
+        let encryptor = self.get_mut()?;
+        let Some(callback) = callback else {
+            encryptor.set_protocol_version_changed_callback(None);
+            return Ok(());
+        };
+        let notify = callback
+            .build_threadsafe_function()
+            .weak::<true>()
+            .build()?;
+        encryptor.set_protocol_version_changed_callback(Some(Box::new(move || {
+            notify.call((), ThreadsafeFunctionCallMode::NonBlocking);
+        })));
+        Ok(())
+    }
+
+    /// Largest output `encrypt` can produce for a frame of `frameLength` bytes.
+    #[napi]
+    pub fn get_max_ciphertext_byte_size(
+        &self,
+        media_type: MediaType,
+        frame_length: u32,
+    ) -> Result<u32> {
+        let size = self
+            .get()?
+            .max_ciphertext_size(media_type.into(), frame_length as usize);
+        Ok(u32::try_from(size).unwrap_or(u32::MAX))
     }
 
     #[napi]
@@ -129,6 +165,18 @@ impl Decryptor {
             .decrypt(media_type.into(), frame)
             .map(Buffer::from)
             .map_err(to_napi)
+    }
+
+    /// Largest output `decrypt` can produce for a frame of `frameLength` bytes.
+    #[napi]
+    pub fn get_max_plaintext_byte_size(
+        &self,
+        media_type: MediaType,
+        frame_length: u32,
+    ) -> Result<u32> {
+        let inner = self.inner.as_ref().ok_or_else(|| destroyed("Decryptor"))?;
+        let size = inner.max_plaintext_size(media_type.into(), frame_length as usize);
+        Ok(u32::try_from(size).unwrap_or(u32::MAX))
     }
 
     #[napi]

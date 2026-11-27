@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::os::raw::{c_char, c_void};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::ptr;
@@ -31,8 +32,10 @@ unsafe extern "C" fn failure_trampoline(
 pub struct CommitOutcome {
     pub failed: bool,
     pub ignored: bool,
-    /// User ids (snowflakes) in the roster after the commit.
+    /// User ids (snowflakes) of the roster entries the commit added, changed or removed.
     pub roster: Vec<u64>,
+    /// Signature public key of each id in `roster`. An empty key means the member was removed.
+    pub roster_signatures: BTreeMap<u64, Vec<u8>>,
 }
 
 /// Outcome of [`Session::process_welcome`].
@@ -40,6 +43,8 @@ pub struct CommitOutcome {
 pub struct WelcomeOutcome {
     /// User ids (snowflakes) in the roster of the group that was joined.
     pub roster: Vec<u64>,
+    /// Signature public key of each id in `roster`.
+    pub roster_signatures: BTreeMap<u64, Vec<u8>>,
 }
 
 /// A DAVE MLS session (`DAVESessionHandle`).
@@ -161,6 +166,7 @@ impl Session {
                 failed: true,
                 ignored: false,
                 roster: Vec::new(),
+                roster_signatures: BTreeMap::new(),
             };
         }
         let failed = unsafe { sys::daveCommitResultIsFailed(handle) };
@@ -174,11 +180,25 @@ impl Session {
                 roster = take_u64s(ids, len);
             }
         }
+        let roster_signatures = roster
+            .iter()
+            .map(|&id| {
+                let mut sig: *mut u8 = ptr::null_mut();
+                let mut len = 0usize;
+                // SAFETY: `id` comes from this handle's roster, as libdave requires.
+                let key = unsafe {
+                    sys::daveCommitResultGetRosterMemberSignature(handle, id, &mut sig, &mut len);
+                    take_bytes(sig, len).unwrap_or_default()
+                };
+                (id, key)
+            })
+            .collect();
         unsafe { sys::daveCommitResultDestroy(handle) };
         CommitOutcome {
             failed,
             ignored,
             roster,
+            roster_signatures,
         }
     }
 
@@ -195,8 +215,24 @@ impl Session {
             sys::daveWelcomeResultGetRosterMemberIds(handle, &mut out, &mut len);
             take_u64s(out, len)
         };
+        let roster_signatures = roster
+            .iter()
+            .map(|&id| {
+                let mut sig: *mut u8 = ptr::null_mut();
+                let mut len = 0usize;
+                // SAFETY: `id` comes from this handle's roster, as libdave requires.
+                let key = unsafe {
+                    sys::daveWelcomeResultGetRosterMemberSignature(handle, id, &mut sig, &mut len);
+                    take_bytes(sig, len).unwrap_or_default()
+                };
+                (id, key)
+            })
+            .collect();
         unsafe { sys::daveWelcomeResultDestroy(handle) };
-        Some(WelcomeOutcome { roster })
+        Some(WelcomeOutcome {
+            roster,
+            roster_signatures,
+        })
     }
 
     /// The marshalled MLS key package to send in `DAVE_MLS_KEY_PACKAGE`.

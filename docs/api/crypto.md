@@ -36,6 +36,14 @@ Reports whether a key ratchet has been installed.
 
 Returns the encryptor's protocol version.
 
+### `setProtocolVersionChangedCallback(callback?: (() => void) | null): void`
+
+Calls `callback` whenever `protocolVersion` changes; pass `null` to remove it. The callback takes no arguments, is delivered asynchronously and does not keep the event loop alive.
+
+### `getMaxCiphertextByteSize(mediaType: MediaType, frameLength: number): number`
+
+Returns the largest output `encrypt` can produce for a frame of that length.
+
 ### `assignSsrcToCodec(ssrc: number, codec: Codec): void`
 
 Associates an SSRC with its codec.
@@ -73,6 +81,10 @@ Transitions into or out of passthrough mode.
 ### `decrypt(mediaType: MediaType, frame: Buffer): Buffer`
 
 Decrypts one frame. Native decryption failures are surfaced as JavaScript exceptions.
+
+### `getMaxPlaintextByteSize(mediaType: MediaType, frameLength: number): number`
+
+Returns the largest output `decrypt` can produce for a frame of that length.
 
 ### `getStats(mediaType: MediaType): DecryptStats`
 

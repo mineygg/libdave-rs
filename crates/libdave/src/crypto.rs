@@ -1,3 +1,7 @@
+use std::os::raw::c_void;
+use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::ptr;
+
 use libdave_rs_sys as sys;
 
 use crate::error::{DecryptError, EncryptError, Error, Result};
@@ -27,9 +31,22 @@ pub type EncryptorStats = sys::DAVEEncryptorStats;
 /// Counters reported by a [`Decryptor`].
 pub type DecryptorStats = sys::DAVEDecryptorStats;
 
+/// Callback invoked when an [`Encryptor`]'s protocol version changes.
+pub type ProtocolVersionHandler = Box<dyn FnMut() + Send>;
+
+unsafe extern "C" fn protocol_version_trampoline(user_data: *mut c_void) {
+    if user_data.is_null() {
+        return;
+    }
+    // SAFETY: `user_data` is the `Box<ProtocolVersionHandler>` owned by the `Encryptor`.
+    let cb = unsafe { &mut *user_data.cast::<ProtocolVersionHandler>() };
+    let _ = catch_unwind(AssertUnwindSafe(cb));
+}
+
 /// Media frame encryptor (`DAVEEncryptorHandle`).
 pub struct Encryptor {
     raw: sys::DAVEEncryptorHandle,
+    callback: *mut ProtocolVersionHandler,
 }
 
 unsafe impl Send for Encryptor {}
@@ -40,7 +57,10 @@ impl Encryptor {
         if raw.is_null() {
             return Err(Error::CreateFailed("encryptor"));
         }
-        Ok(Self { raw })
+        Ok(Self {
+            raw,
+            callback: ptr::null_mut(),
+        })
     }
 
     /// Installs the sender's key ratchet. libdave keeps its own reference, so the ratchet
@@ -63,6 +83,31 @@ impl Encryptor {
 
     pub fn protocol_version(&self) -> u16 {
         unsafe { sys::daveEncryptorGetProtocolVersion(self.raw) }
+    }
+
+    /// Installs (or removes, with `None`) a callback run whenever
+    /// [`Encryptor::protocol_version`] changes.
+    ///
+    /// libdave calls it synchronously, from the method that caused the change.
+    pub fn set_protocol_version_changed_callback(
+        &mut self,
+        handler: Option<ProtocolVersionHandler>,
+    ) {
+        let new = handler.map_or(ptr::null_mut(), |f| Box::into_raw(Box::new(f)));
+        // libdave cannot unregister a callback, so removal passes null `user_data`,
+        // which the trampoline ignores.
+        unsafe {
+            sys::daveEncryptorSetProtocolVersionChangedCallback(
+                self.raw,
+                protocol_version_trampoline,
+                new.cast(),
+            )
+        };
+        let old = std::mem::replace(&mut self.callback, new);
+        if !old.is_null() {
+            // SAFETY: libdave no longer holds `old`.
+            drop(unsafe { Box::from_raw(old) });
+        }
     }
 
     /// Tells the encryptor which codec an SSRC carries (needed for codec-aware framing).
@@ -123,6 +168,9 @@ impl Encryptor {
 impl Drop for Encryptor {
     fn drop(&mut self) {
         unsafe { sys::daveEncryptorDestroy(self.raw) };
+        if !self.callback.is_null() {
+            drop(unsafe { Box::from_raw(self.callback) });
+        }
     }
 }
 

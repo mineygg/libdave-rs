@@ -1,3 +1,6 @@
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
+
 use libdave_rs::{
     max_supported_protocol_version, Codec, Decryptor, Encryptor, MediaType, Session, SessionManager,
 };
@@ -57,4 +60,25 @@ fn manager_drives_a_session() {
         mgr.encrypt(MediaType::Audio, 1, &frame).expect("encrypt"),
         frame
     );
+}
+
+#[test]
+fn reports_protocol_version_changes() {
+    let calls = Arc::new(AtomicUsize::new(0));
+    let counter = Arc::clone(&calls);
+    let mut enc = Encryptor::new().expect("encryptor");
+    enc.set_protocol_version_changed_callback(Some(Box::new(move || {
+        counter.fetch_add(1, Ordering::SeqCst);
+    })));
+
+    enc.set_passthrough_mode(true);
+    enc.set_passthrough_mode(true); // unchanged version, no call
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
+    enc.set_passthrough_mode(false);
+    assert_eq!(calls.load(Ordering::SeqCst), 2);
+
+    enc.set_protocol_version_changed_callback(None);
+    assert_eq!(Arc::strong_count(&calls), 1, "old callback is released");
+    enc.set_passthrough_mode(true);
+    assert_eq!(calls.load(Ordering::SeqCst), 2);
 }

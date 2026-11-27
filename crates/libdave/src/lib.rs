@@ -20,7 +20,9 @@ use std::sync::RwLock;
 
 use libdave_rs_sys as sys;
 
-pub use crypto::{Decryptor, DecryptorStats, Encryptor, EncryptorStats, KeyRatchet};
+pub use crypto::{
+    Decryptor, DecryptorStats, Encryptor, EncryptorStats, KeyRatchet, ProtocolVersionHandler,
+};
 pub use error::{DecryptError, EncryptError, Error, Result};
 pub use manager::{CommitResult, SessionManager, WelcomeResult};
 pub use session::{CommitOutcome, FailureHandler, Session, WelcomeOutcome};

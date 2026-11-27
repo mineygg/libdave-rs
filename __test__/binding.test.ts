@@ -43,7 +43,9 @@ describe('Session', () => {
     const session = new Session();
     session.init(maxSupportedProtocolVersion(), GROUP, '42');
     const junk = Buffer.from([1, 2, 3]);
-    expect(session.processCommit(junk).roster).toEqual([]);
+    const commit = session.processCommit(junk);
+    expect(commit.roster).toEqual([]);
+    expect(commit.rosterSignatures).toEqual({});
     expect(session.processWelcome(junk)).toBeNull();
     expect(session.processProposals(junk)).toBeNull();
     expect(Array.isArray(session.takeFailures())).toBe(true);
@@ -83,6 +85,39 @@ describe('Encryptor and Decryptor', () => {
     const decryptor = new Decryptor();
     decryptor.transitionToPassthroughMode(true);
     expect(decryptor.decrypt(MediaType.Audio, wire)).toEqual(FRAME);
+  });
+
+  it('reports protocol version changes', async () => {
+    const encryptor = new Encryptor();
+    let calls = 0;
+    // The callback does not keep the event loop alive, so wait with a timer.
+    const tick = () => new Promise((resolve) => setTimeout(resolve, 20));
+    encryptor.setProtocolVersionChangedCallback(() => {
+      calls += 1;
+    });
+    encryptor.setPassthroughMode(true);
+    await tick();
+    expect(calls).toBe(1);
+
+    encryptor.setProtocolVersionChangedCallback(null);
+    encryptor.setPassthroughMode(false);
+    await tick();
+    expect(calls).toBe(1);
+    encryptor.destroy();
+    expect(() => encryptor.setProtocolVersionChangedCallback(null)).toThrow(
+      /destroyed/,
+    );
+  });
+
+  it('reports maximum frame sizes', () => {
+    const encryptor = new Encryptor();
+    const decryptor = new Decryptor();
+    expect(
+      encryptor.getMaxCiphertextByteSize(MediaType.Audio, FRAME.length),
+    ).toBeGreaterThanOrEqual(FRAME.length);
+    expect(
+      decryptor.getMaxPlaintextByteSize(MediaType.Audio, FRAME.length),
+    ).toBeGreaterThanOrEqual(FRAME.length);
   });
 
   it('throws when encrypting without keys', () => {

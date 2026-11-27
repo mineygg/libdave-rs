@@ -56,7 +56,8 @@ Processes an MLS commit.
 interface CommitOutcome {
   failed: boolean;
   ignored: boolean;
-  roster: string[]; // user IDs after the commit
+  roster: string[]; // user IDs added, changed or removed by the commit
+  rosterSignatures: Record<string, Buffer>; // signature key per ID; empty if removed
 }
 ```
 
@@ -67,6 +68,7 @@ Processes a Welcome message. Returns `null` if it could not be processed.
 ```ts
 interface WelcomeOutcome {
   roster: string[]; // user IDs in the joined group
+  rosterSignatures: Record<string, Buffer>; // signature key per ID
 }
 ```
 

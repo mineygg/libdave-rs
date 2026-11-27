@@ -82,10 +82,12 @@ interface CommitOutcome {
   failed: boolean;
   ignored: boolean;
   roster: string[];
+  rosterSignatures: Record<string, Buffer>;
 }
 
 interface WelcomeOutcome {
   roster: string[];
+  rosterSignatures: Record<string, Buffer>;
 }
 ```
 

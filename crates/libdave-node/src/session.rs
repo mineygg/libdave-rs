@@ -1,3 +1,4 @@
+use std::collections::{BTreeMap, HashMap};
 use std::sync::mpsc::Receiver;
 
 use napi::bindgen_prelude::*;
@@ -11,18 +12,28 @@ use crate::{destroyed, snowflake, to_napi};
 pub struct CommitOutcome {
     pub failed: bool,
     pub ignored: bool,
-    /// User ids in the roster after the commit.
+    /// User ids of the roster entries the commit added, changed or removed.
     pub roster: Vec<String>,
+    /// Signature public key per user id in `roster`. Empty means the member was removed.
+    pub roster_signatures: HashMap<String, Buffer>,
 }
 
 #[napi(object)]
 pub struct WelcomeOutcome {
     /// User ids in the roster of the group that was joined.
     pub roster: Vec<String>,
+    /// Signature public key per user id in `roster`.
+    pub roster_signatures: HashMap<String, Buffer>,
 }
 
 fn ids(roster: Vec<u64>) -> Vec<String> {
     roster.into_iter().map(|id| id.to_string()).collect()
+}
+
+fn signatures(keys: BTreeMap<u64, Vec<u8>>) -> HashMap<String, Buffer> {
+    keys.into_iter()
+        .map(|(id, key)| (id.to_string(), key.into()))
+        .collect()
 }
 
 pub struct FingerprintTask(Receiver<Vec<u8>>);
@@ -143,6 +154,7 @@ impl Session {
             failed: outcome.failed,
             ignored: outcome.ignored,
             roster: ids(outcome.roster),
+            roster_signatures: signatures(outcome.roster_signatures),
         })
     }
 
@@ -154,6 +166,7 @@ impl Session {
             .process_welcome(welcome)
             .map(|outcome| WelcomeOutcome {
                 roster: ids(outcome.roster),
+                roster_signatures: signatures(outcome.roster_signatures),
             }))
     }
 
